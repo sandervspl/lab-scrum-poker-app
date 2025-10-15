@@ -74,6 +74,7 @@
     "postcss": "^8.5",
     "prettier-plugin-curly": "^0.3.2",
     "prettier-plugin-tailwindcss": "^0.7.0",
+    "shadcn": "^3.4.1",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
