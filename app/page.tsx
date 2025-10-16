@@ -2,6 +2,7 @@
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,10 +54,6 @@ export default function HomePage() {
     setRoomHistory(getRoomHistory());
   };
 
-  const handleRoomClick = (room: RoomHistoryItem) => {
-    router.push(`/room/${room.roomId}`);
-  };
-
   return (
     <div className="from-background via-background to-muted/20 flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gradient-to-br p-4">
       <div className="w-full max-w-2xl space-y-6">
@@ -100,9 +97,9 @@ export default function HomePage() {
             <CardContent>
               <div className="space-y-2">
                 {roomHistory.map((room) => (
-                  <button
+                  <Link
                     key={room.roomId}
-                    onClick={() => handleRoomClick(room)}
+                    href={`/room/${room.roomId}`}
                     className="bg-card hover:bg-accent hover:border-primary/50 group flex w-full items-center justify-between rounded-lg border p-4 text-left transition-all"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -141,7 +138,7 @@ export default function HomePage() {
                         <Trash2 className="text-muted-foreground hover:text-destructive h-4 w-4" />
                       </Button>
                     </div>
-                  </button>
+                  </Link>
                 ))}
               </div>
             </CardContent>
