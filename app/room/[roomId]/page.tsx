@@ -667,7 +667,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
                         className={cn(
                           'flex h-10 w-10 items-center justify-center rounded-full font-semibold',
                           hasVoted
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            ? 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200'
                             : 'bg-primary/10 text-primary',
                         )}
                       >
