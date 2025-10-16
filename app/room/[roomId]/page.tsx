@@ -660,15 +660,15 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
                 return (
                   <div
                     key={participant.id}
-                    className="bg-muted/50 flex items-center gap-4 rounded-lg p-3"
+                    className="bg-muted flex items-center gap-4 rounded-lg p-3"
                   >
                     <div className="flex flex-1 items-center gap-3">
                       <div
                         className={cn(
                           'flex h-10 w-10 items-center justify-center rounded-full font-semibold',
                           hasVoted
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-amber-200 text-amber-900 dark:bg-amber-300 dark:text-amber-950',
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : 'bg-primary/10 text-primary',
                         )}
                       >
                         {participant.name.charAt(0).toUpperCase()}
