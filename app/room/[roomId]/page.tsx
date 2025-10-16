@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   AlertDialog,
@@ -22,13 +22,13 @@ import { addRoomToHistory, updateRoomNameInHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { POKER_VALUES, type Participant, type Room, type Vote } from '@/types';
+import confetti from 'canvas-confetti';
 import { Check, Copy, Eye, EyeOff, Pencil, Trash2, Users } from 'lucide-react';
 
 export default function RoomPage({ params }: { params: { roomId: string } }) {
   const { roomId } = params;
   const searchParams = useSearchParams();
   const supabase = getSupabaseBrowserClient();
-
   const [room, setRoom] = useState<Room | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [votes, setVotes] = useState<Vote[]>([]);
@@ -40,6 +40,46 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
   const [isEditingRoomName, setIsEditingRoomName] = useState(false);
   const [editedRoomName, setEditedRoomName] = useState('');
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [hasCelebrated, setHasCelebrated] = useState(false);
+
+  function allVotesMatch() {
+    if (participants.length === 0) {
+      return false;
+    }
+
+    const validVotes = votes
+      // Filter out non-votes and non-numbers
+      .filter((v) => v.vote_value != null && !Number.isNaN(Number(v.vote_value)));
+
+    if (validVotes.length === 0) {
+      return false;
+    }
+
+    const allSameVotes = validVotes.every((v) => v.vote_value === votes[0].vote_value);
+
+    return allSameVotes;
+  }
+
+  function randomInRange(min: number, max: number): number {
+    return Math.random() * (max - min) + min;
+  }
+
+  function launchConfetti() {
+    confetti({
+      angle: randomInRange(55, 125),
+      spread: randomInRange(50, 70),
+      particleCount: randomInRange(50, 100),
+      origin: { y: 0.6 },
+    });
+  }
+
+  async function shootConfetti() {
+    launchConfetti();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    launchConfetti();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    launchConfetti();
+  }
 
   useEffect(() => {
     const adminId = searchParams.get('admin');
@@ -56,7 +96,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
     }
   }, [roomId, searchParams]);
 
-  const fetchRoom = async () => {
+  const fetchRoom = useCallback(async () => {
     const { data, error } = await supabase.from('rooms').select('*').eq('id', roomId).single();
 
     if (error) {
@@ -65,9 +105,9 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
     }
 
     setRoom(data);
-  };
+  }, [roomId, supabase]);
 
-  const fetchParticipants = async () => {
+  const fetchParticipants = useCallback(async () => {
     console.log('[v0] Fetching participants');
     const { data, error } = await supabase
       .from('participants')
@@ -82,9 +122,9 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
 
     console.log('[v0] Participants fetched:', data);
     setParticipants(data);
-  };
+  }, [roomId, supabase]);
 
-  const fetchVotes = async () => {
+  const fetchVotes = useCallback(async () => {
     console.log('[v0] Fetching votes');
     const { data, error } = await supabase.from('votes').select('*').eq('room_id', roomId);
 
@@ -95,11 +135,11 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
 
     console.log('[v0] Votes fetched:', data);
     setVotes(data);
-  };
+  }, [roomId, supabase]);
 
   useEffect(() => {
     fetchRoom();
-  }, [roomId]);
+  }, [fetchRoom]);
 
   useEffect(() => {
     const channel = supabase
@@ -107,7 +147,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Room updated:', payload);
           if (payload.new) {
             setRoom(payload.new as Room);
@@ -118,7 +158,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'participants', filter: `room_id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Participants changed:', payload);
           fetchParticipants();
         },
@@ -126,7 +166,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Vote inserted:', payload);
           fetchVotes();
         },
@@ -134,7 +174,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Vote updated:', payload);
           fetchVotes();
         },
@@ -142,7 +182,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Vote deleted:', payload);
           fetchVotes();
         },
@@ -152,7 +192,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, supabase]);
+  }, [roomId, supabase, fetchParticipants, fetchVotes]);
 
   useEffect(() => {
     if (currentParticipantId) {
@@ -181,7 +221,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
 
       checkParticipant();
     }
-  }, [currentParticipantId, roomId, supabase, room]);
+  }, [currentParticipantId, roomId, supabase, room, fetchParticipants, fetchVotes]);
 
   const joinRoom = async () => {
     if (!name.trim()) return;
@@ -240,7 +280,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
         room_id: roomId,
         participant_id: currentParticipantId,
         vote_value: value,
-        created_at: new Date().toISOString(),
+        voted_at: new Date().toISOString(),
       };
       setVotes([...votes, newVote]);
     }
@@ -299,6 +339,10 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
     }
 
     await fetchRoom();
+    if (newValue && !hasCelebrated && allVotesMatch()) {
+      shootConfetti();
+      setHasCelebrated(true);
+    }
   };
 
   const resetVotes = async () => {
@@ -317,6 +361,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
     await fetchVotes();
     await fetchRoom();
     setShowResetDialog(false);
+    setHasCelebrated(false);
   };
 
   const copyRoomLink = () => {
@@ -401,7 +446,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
   const calculateAverage = () => {
     const numericVotes = votes
       .map((v) => v.vote_value)
-      .filter((value) => value !== '?' && value !== '☕' && !isNaN(Number(value)))
+      .filter((value) => value !== '?' && value !== '☕' && !Number.isNaN(Number(value)))
       .map(Number);
 
     if (numericVotes.length === 0) return null;
@@ -429,8 +474,8 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
         const valueB = voteB.vote_value;
 
         // Check if values are numeric
-        const isNumericA = !isNaN(Number(valueA));
-        const isNumericB = !isNaN(Number(valueB));
+        const isNumericA = !Number.isNaN(Number(valueA));
+        const isNumericB = !Number.isNaN(Number(valueB));
 
         // Numeric values come before non-numeric
         if (isNumericA && !isNumericB) return -1;
@@ -512,6 +557,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
               {isAdmin && !isEditingRoomName && (
                 <button
                   onClick={startEditingRoomName}
+                  type="button"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Edit room name"
                 >
@@ -539,6 +585,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
               {POKER_VALUES.map((value) => (
                 <button
                   key={value}
+                  type="button"
                   onClick={() => castVote(value)}
                   className={cn(
                     'flex aspect-[3/4] items-center justify-center rounded-lg border-2 text-2xl font-bold transition-all hover:scale-105 hover:shadow-lg',
