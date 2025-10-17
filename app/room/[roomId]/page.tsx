@@ -661,7 +661,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
                 return (
                   <div
                     key={participant.id}
-                    className="bg-muted flex items-center gap-4 rounded-lg p-3"
+                    className="bg-muted/80 flex items-center gap-4 rounded-lg p-3"
                   >
                     <div className="flex flex-1 items-center gap-3">
                       <div
