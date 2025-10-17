@@ -555,14 +555,15 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
                 </p>
               )}
               {isAdmin && !isEditingRoomName && (
-                <button
+                <Button
                   onClick={startEditingRoomName}
                   type="button"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
                   aria-label="Edit room name"
+                  variant="ghost"
                 >
                   <Pencil className="h-3.5 w-3.5" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -588,7 +589,7 @@ export default function RoomPage({ params }: { params: { roomId: string } }) {
                   type="button"
                   onClick={() => castVote(value)}
                   className={cn(
-                    'flex aspect-[3/4] items-center justify-center rounded-lg border-2 text-2xl font-bold transition-all hover:scale-105 hover:shadow-lg',
+                    'flex aspect-[3/4] cursor-pointer items-center justify-center rounded-lg border-2 text-2xl font-bold transition-all hover:scale-105 hover:shadow-lg',
                     currentVote?.vote_value === value
                       ? 'border-primary bg-primary text-primary-foreground scale-105 shadow-lg'
                       : 'border-border bg-card hover:border-primary/50',
