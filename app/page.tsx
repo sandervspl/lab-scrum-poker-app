@@ -48,11 +48,32 @@ export default function HomePage() {
     }
   };
 
-  const handleDeleteRoom = (roomId: string, e: React.MouseEvent) => {
+  function handleDeleteRoom(roomId: string, e: React.MouseEvent) {
     e.stopPropagation();
     removeRoomFromHistory(roomId);
     setRoomHistory(getRoomHistory());
-  };
+  }
+
+  function getRelativeLastJoinedDate(lastJoined: number) {
+    const now = Date.now();
+    const lastJoinedTime = new Date(lastJoined).getTime();
+    const diffMs = now - lastJoinedTime;
+    const seconds = Math.round(diffMs / 1000);
+    const minutes = Math.round(seconds / 60);
+    const hours = Math.round(minutes / 60);
+    const days = Math.round(hours / 24);
+
+    const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+    if (Math.abs(seconds) < 60) {
+      return rtf.format(-seconds, 'second');
+    } else if (Math.abs(minutes) < 60) {
+      return rtf.format(-minutes, 'minute');
+    } else if (Math.abs(hours) < 24) {
+      return rtf.format(-hours, 'hour');
+    } else {
+      return rtf.format(-days, 'day');
+    }
+  }
 
   return (
     <div className="from-background via-background to-muted/20 flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gradient-to-br p-4">
@@ -100,7 +121,7 @@ export default function HomePage() {
                   <Link
                     key={room.roomId}
                     href={`/room/${room.roomId}`}
-                    className="bg-card hover:bg-accent hover:border-primary/50 group flex w-full items-center justify-between rounded-lg border p-4 text-left transition-all"
+                    className="bg-card hover:border-primary group flex w-full items-center justify-between rounded-lg border p-4 text-left transition-all"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                       <div className="bg-primary/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
@@ -115,11 +136,7 @@ export default function HomePage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-mono text-sm">{room.roomName || room.roomId}</p>
                         <p className="text-muted-foreground text-xs">
-                          {new Date(room.lastJoined).toLocaleDateString()} at{' '}
-                          {new Date(room.lastJoined).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {getRelativeLastJoinedDate(room.lastJoined)}
                         </p>
                       </div>
                     </div>
@@ -133,7 +150,10 @@ export default function HomePage() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
-                        onClick={(e) => handleDeleteRoom(room.roomId, e)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          return handleDeleteRoom(room.roomId, e);
+                        }}
                       >
                         <Trash2 className="text-muted-foreground hover:text-destructive h-4 w-4" />
                       </Button>
