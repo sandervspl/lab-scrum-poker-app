@@ -7,6 +7,8 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import { Loader2Icon } from 'lucide-react';
 
+import { RoomProvider } from './_components/context';
+
 type Props = {
   params: Promise<{ roomId: string }>;
 };
@@ -39,7 +41,9 @@ export default async function RoomPage({ params }: Props) {
           </div>
         }
       >
-        <RoomClient roomId={roomId} participantId={participantId} />
+        <RoomProvider>
+          <RoomClient roomId={roomId} participantId={participantId} />
+        </RoomProvider>
       </Suspense>
     </HydrationBoundary>
   );

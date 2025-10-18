@@ -28,3 +28,10 @@ export async function getParticipant(
     .eq('participant_id', participantId)
     .single();
 }
+
+export async function resetVotesOfRoom(supabase: TypedSupabaseClient, roomId: string) {
+  return Promise.all([
+    supabase.from('votes').delete().eq('room_id', roomId),
+    supabase.from('rooms').update({ votes_revealed: false }).eq('id', roomId),
+  ]);
+}

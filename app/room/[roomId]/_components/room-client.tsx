@@ -28,7 +28,6 @@ export function RoomClient({ roomId, participantId }: Props) {
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [hasCelebrated, setHasCelebrated] = useState(false);
 
   const { data: room } = useSuspenseQuery(roomQueryOptions(supabase, roomId));
   const { data: participants } = useSuspenseQuery(participantsQueryOptions(supabase, roomId));
@@ -48,71 +47,9 @@ export function RoomClient({ roomId, participantId }: Props) {
   // Subscribe to realtime changes
   useRealtime(roomId);
 
-  // Confetti functions
-  function launchConfetti() {
-    confetti({
-      angle: randomInRange(55, 125),
-      spread: randomInRange(50, 70),
-      particleCount: randomInRange(50, 100),
-      origin: { y: 0.6 },
-    });
-  }
-
-  async function shootConfetti() {
-    launchConfetti();
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    launchConfetti();
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    launchConfetti();
-  }
-
   function handleJoined() {
     // Refetch all room queries
     queryClient.invalidateQueries({ queryKey: ['room'] });
-  }
-
-  async function toggleVotesVisibility() {
-    const newValue = !room.data?.votes_revealed;
-
-    const { error } = await supabase
-      .from('rooms')
-      .update({ votes_revealed: newValue })
-      .eq('id', roomId);
-
-    if (error) {
-      console.error('[v0] Error toggling votes visibility:', error);
-      return;
-    }
-
-    queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
-    if (
-      newValue &&
-      !hasCelebrated &&
-      votes.data &&
-      participants.data &&
-      allVotesMatch(votes.data, participants.data)
-    ) {
-      shootConfetti();
-      setHasCelebrated(true);
-    }
-  }
-
-  async function resetVotes() {
-    console.log('[v0] Resetting votes');
-    const { error: votesError } = await supabase.from('votes').delete().eq('room_id', roomId);
-
-    if (votesError) {
-      console.error('[v0] Error deleting votes:', votesError);
-      return;
-    }
-
-    console.log('[v0] Votes deleted successfully');
-
-    await supabase.from('rooms').update({ votes_revealed: false }).eq('id', roomId);
-
-    queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
-    queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
-    setHasCelebrated(false);
   }
 
   async function removeParticipant(participantIdToRemove: string) {
@@ -189,8 +126,6 @@ export function RoomClient({ roomId, participantId }: Props) {
           isAdmin={isAdmin}
           averageVote={averageVote}
           onRemoveParticipant={removeParticipant}
-          onToggleVotes={toggleVotesVisibility}
-          onResetVotes={resetVotes}
         />
       </div>
     </div>

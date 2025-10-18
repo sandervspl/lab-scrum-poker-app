@@ -14,13 +14,11 @@ import { AdminControls } from './admin-controls';
 interface ParticipantsListProps {
   participants: Database['public']['Tables']['participants']['Row'][];
   votes: Database['public']['Tables']['votes']['Row'][];
-  room: Database['public']['Tables']['rooms']['Row'] | null;
+  room: Database['public']['Tables']['rooms']['Row'];
   currentParticipantId: string | null;
   isAdmin: boolean;
   averageVote: string | null;
   onRemoveParticipant: (participantId: string) => void;
-  onToggleVotes: () => void;
-  onResetVotes: () => void;
 }
 
 export function ParticipantsList({
@@ -31,8 +29,6 @@ export function ParticipantsList({
   isAdmin,
   averageVote,
   onRemoveParticipant,
-  onToggleVotes,
-  onResetVotes,
 }: ParticipantsListProps) {
   const sortedParticipants = sortParticipantsByVote(
     participants,
@@ -47,12 +43,7 @@ export function ParticipantsList({
           <Users className="h-5 w-5" />
           Participants ({participants.length})
         </CardTitle>
-        <AdminControls
-          room={room}
-          averageVote={averageVote}
-          onToggleVotes={onToggleVotes}
-          onResetVotes={onResetVotes}
-        />
+        <AdminControls room={room} averageVote={averageVote} />
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
