@@ -1,19 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRealtime } from '@/app/room/[roomId]/use-realtime';
+import { Button } from '@/components/ui/button';
 import {
   participantsQueryOptions,
   roomQueryOptions,
   votesQueryOptions,
 } from '@/lib/queries/room-queries';
-import { allVotesMatch, calculateAverage, randomInRange } from '@/lib/room-utils';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
-import confetti from 'canvas-confetti';
+import { useSuspenseQuery } from '@tanstack/react-query';
 
-import { Button } from '../../../../components/ui/button';
 import { JoinRoomForm } from './join-room-form';
 import { ParticipantsList } from './participants-list';
 import { RoomHeader } from './room-header';
@@ -26,7 +23,6 @@ type Props = {
 
 export function RoomClient({ roomId, participantId }: Props) {
   const supabase = getSupabaseBrowserClient();
-  const queryClient = useQueryClient();
   const router = useRouter();
 
   const { data: room } = useSuspenseQuery(roomQueryOptions(supabase, roomId));
@@ -44,8 +40,10 @@ export function RoomClient({ roomId, participantId }: Props) {
     );
   }
 
-  // Subscribe to realtime changes
+  // Subscribe to room updates
   useRealtime(roomId);
+
+  // Show name form if first time joining room
   if (!participants.data.some((p) => p.participant_id === participantId)) {
     return (
       <JoinRoomForm
@@ -60,12 +58,8 @@ export function RoomClient({ roomId, participantId }: Props) {
   return (
     <div className="from-background via-background to-muted/20 min-h-[calc(100vh-3.5rem)] bg-gradient-to-br p-4 md:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        {/* Header */}
         <RoomHeader room={room.data} roomId={roomId} isAdmin={isAdmin} />
-
         <VotingCards participantId={participantId} />
-
-        {/* Participants and Votes */}
         <ParticipantsList
           participants={participants.data ?? []}
           votes={votes.data ?? []}

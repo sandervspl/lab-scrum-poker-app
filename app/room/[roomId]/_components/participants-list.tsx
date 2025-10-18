@@ -10,21 +10,15 @@ import { Users } from 'lucide-react';
 import { AdminControls } from './admin-controls';
 import { RemoveParticipantButton } from './remove-participant-button';
 
-interface ParticipantsListProps {
+type Props = {
   participants: Database['public']['Tables']['participants']['Row'][];
   votes: Database['public']['Tables']['votes']['Row'][];
   room: Database['public']['Tables']['rooms']['Row'];
   userId: string | null;
   isAdmin: boolean;
-}
+};
 
-export function ParticipantsList({
-  participants,
-  votes,
-  room,
-  userId,
-  isAdmin,
-}: ParticipantsListProps) {
+export function ParticipantsList({ participants, votes, room, userId, isAdmin }: Props) {
   const sortedParticipants = sortParticipantsByVote(
     participants,
     votes,
