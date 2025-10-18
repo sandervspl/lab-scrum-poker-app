@@ -11,7 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Check, Copy, Pencil } from 'lucide-react';
 
 interface RoomHeaderProps {
-  room: Database['public']['Tables']['rooms']['Row'];
+  room: Database['public']['Tables']['rooms']['Row'] | null;
   roomId: string;
   isAdmin: boolean;
 }

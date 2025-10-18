@@ -1,32 +1,36 @@
-'use client';
+import { QueryOptions, skipToken } from '@tanstack/react-query';
 
-import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
+import { TypedSupabaseClient } from '../supabase/types';
+import { getParticipant, getParticipants, getRoom, getVotes } from './room-db';
 
-import { getParticipantCheck, getParticipants, getRoom, getVotes } from './room-db';
-
-export function useRoomQuery(roomId: string) {
-  const supabase = getSupabaseBrowserClient();
-  return useQuery(getRoom(supabase, roomId));
+export function roomQueryOptions(supabase: TypedSupabaseClient, roomId: string) {
+  return {
+    queryKey: ['room', roomId],
+    queryFn: () => getRoom(supabase, roomId),
+  } satisfies QueryOptions;
 }
 
-export function useParticipantsQuery(roomId: string) {
-  const supabase = getSupabaseBrowserClient();
-  return useQuery(getParticipants(supabase, roomId));
+export function participantsQueryOptions(supabase: TypedSupabaseClient, roomId: string) {
+  return {
+    queryKey: ['room', roomId, 'participants'],
+    queryFn: () => getParticipants(supabase, roomId),
+  } satisfies QueryOptions;
 }
 
-export function useVotesQuery(roomId: string) {
-  const supabase = getSupabaseBrowserClient();
-  return useQuery(getVotes(supabase, roomId));
+export function votesQueryOptions(supabase: TypedSupabaseClient, roomId: string) {
+  return {
+    queryKey: ['room', roomId, 'votes'],
+    queryFn: () => getVotes(supabase, roomId),
+  } satisfies QueryOptions;
 }
 
-export function useParticipantCheckQuery(
+export function participantQueryOptions(
+  supabase: TypedSupabaseClient,
   roomId: string,
-  participantId: string,
-  enabled: boolean = true,
+  participantId: string | null,
 ) {
-  const supabase = getSupabaseBrowserClient();
-  return useQuery(getParticipantCheck(supabase, roomId, participantId), {
-    enabled: !!participantId && enabled,
-  });
+  return {
+    queryKey: ['room', roomId, 'participant', participantId],
+    queryFn: participantId ? () => getParticipant(supabase, roomId, participantId) : skipToken,
+  } satisfies QueryOptions;
 }

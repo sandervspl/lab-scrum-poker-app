@@ -14,11 +14,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { Room } from '@/types';
+import { Database } from '@/lib/supabase/database.types';
 import { Eye, EyeOff } from 'lucide-react';
 
 interface AdminControlsProps {
-  room: Room | undefined;
+  room: Database['public']['Tables']['rooms']['Row'] | null;
   averageVote: string | null;
   onToggleVotes: () => void;
   onResetVotes: () => void;

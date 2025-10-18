@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { sortParticipantsByVote } from '@/lib/room-utils';
+import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
 import type { Participant, Room, Vote } from '@/types';
 import { Trash2, Users } from 'lucide-react';
@@ -11,9 +12,9 @@ import { Trash2, Users } from 'lucide-react';
 import { AdminControls } from './AdminControls';
 
 interface ParticipantsListProps {
-  participants: Participant[];
-  votes: Vote[];
-  room: Room | undefined;
+  participants: Database['public']['Tables']['participants']['Row'][];
+  votes: Database['public']['Tables']['votes']['Row'][];
+  room: Database['public']['Tables']['rooms']['Row'] | null;
   currentParticipantId: string | null;
   isAdmin: boolean;
   averageVote: string | null;

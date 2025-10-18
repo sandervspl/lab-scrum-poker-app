@@ -1,6 +1,10 @@
 import type { Participant, Vote } from '@/types';
 
-export function calculateAverage(votes: Vote[]): string | null {
+import { Database } from './supabase/database.types';
+
+export function calculateAverage(
+  votes: Database['public']['Tables']['votes']['Row'][],
+): string | null {
   const numericVotes = votes
     .map((v) => v.vote_value)
     .filter((value) => value !== '?' && value !== '☕' && !Number.isNaN(Number(value)))
@@ -13,7 +17,10 @@ export function calculateAverage(votes: Vote[]): string | null {
   return average.toFixed(1);
 }
 
-export function allVotesMatch(votes: Vote[], participants: Participant[]): boolean {
+export function allVotesMatch(
+  votes: Database['public']['Tables']['votes']['Row'][],
+  participants: Database['public']['Tables']['participants']['Row'][],
+): boolean {
   if (participants.length === 0) {
     return false;
   }
@@ -32,10 +39,10 @@ export function allVotesMatch(votes: Vote[], participants: Participant[]): boole
 }
 
 export function sortParticipantsByVote(
-  participants: Participant[],
-  votes: Vote[],
+  participants: Database['public']['Tables']['participants']['Row'][],
+  votes: Database['public']['Tables']['votes']['Row'][],
   votesRevealed: boolean,
-): Participant[] {
+): Database['public']['Tables']['participants']['Row'][] {
   if (!votesRevealed) {
     return participants;
   }

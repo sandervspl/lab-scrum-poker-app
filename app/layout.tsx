@@ -7,7 +7,6 @@ import { GeistSans } from 'geist/font/sans';
 
 import './globals.css';
 
-import { Suspense } from 'react';
 import { Header } from '@/components/header';
 import { ThemeProvider } from '@/components/theme-provider';
 import { QueryProvider } from '@/lib/react-query-provider';

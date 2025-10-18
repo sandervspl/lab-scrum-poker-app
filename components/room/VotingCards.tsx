@@ -1,11 +1,12 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
 import { POKER_VALUES, type Vote } from '@/types';
 
 interface VotingCardsProps {
-  currentVote: Vote | undefined;
+  currentVote: Database['public']['Tables']['votes']['Row'] | undefined;
   onCastVote: (value: string) => void;
 }
 

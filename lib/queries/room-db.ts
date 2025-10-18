@@ -16,7 +16,7 @@ export async function getVotes(supabase: TypedSupabaseClient, roomId: string) {
   return supabase.from('votes').select('*').eq('room_id', roomId);
 }
 
-export async function getParticipantCheck(
+export async function getParticipant(
   supabase: TypedSupabaseClient,
   roomId: string,
   participantId: string,
