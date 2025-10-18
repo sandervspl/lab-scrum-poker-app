@@ -18,7 +18,7 @@ import type { Room } from '@/types';
 import { Eye, EyeOff } from 'lucide-react';
 
 interface AdminControlsProps {
-  room: Room;
+  room: Room | undefined;
   averageVote: string | null;
   onToggleVotes: () => void;
   onResetVotes: () => void;
@@ -39,7 +39,7 @@ export function AdminControls({
 
   return (
     <div className="flex items-center gap-3">
-      {room.votes_revealed && averageVote && (
+      {room?.votes_revealed && averageVote && (
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-sm">Average:</span>
           <Badge variant="default" className="px-3 py-1 text-lg font-bold">
@@ -67,7 +67,7 @@ export function AdminControls({
         </AlertDialogContent>
       </AlertDialog>
       <Button onClick={onToggleVotes} variant="outline" size="sm">
-        {room.votes_revealed ? (
+        {room?.votes_revealed ? (
           <>
             <EyeOff className="mr-2 h-4 w-4" />
             Hide Votes

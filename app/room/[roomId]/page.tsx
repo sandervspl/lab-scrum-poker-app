@@ -1,22 +1,24 @@
-import { Suspense } from 'react';
+import { cookies } from 'next/headers';
 import { RoomClient } from '@/components/room/RoomClient';
+import { getParticipants, getRoom, getVotes } from '@/lib/queries/room-db';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
+import { prefetchQuery } from '@supabase-cache-helpers/postgrest-react-query';
+import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 
 interface RoomPageProps {
-  params: { roomId: string };
-  searchParams: { admin?: string };
+  params: Promise<{ roomId: string }>;
+  searchParams: Promise<{ admin?: string }>;
 }
 
 export default async function RoomPage({ params, searchParams }: RoomPageProps) {
-  const { roomId } = params;
-  const supabase = await getSupabaseServerClient();
+  const { roomId } = await params;
+  const { admin } = await searchParams;
+  const cookieStore = await cookies();
+  const supabase = getSupabaseServerClient(cookieStore);
+  const queryClient = new QueryClient();
 
   // Fetch initial data server-side
-  const { data: room, error: roomError } = await supabase
-    .from('rooms')
-    .select('*')
-    .eq('id', roomId)
-    .single();
+  const { data: room, error: roomError } = await getRoom(supabase, roomId);
 
   if (roomError || !room) {
     return (
@@ -26,26 +28,15 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
     );
   }
 
-  const [{ data: participantsData }, { data: votesData }] = await Promise.all([
-    supabase
-      .from('participants')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('joined_at', { ascending: true }),
-    supabase.from('votes').select('*').eq('room_id', roomId),
+  await Promise.all([
+    prefetchQuery(queryClient, getRoom(supabase, roomId)),
+    prefetchQuery(queryClient, getParticipants(supabase, roomId)),
+    prefetchQuery(queryClient, getVotes(supabase, roomId)),
   ]);
 
-  const participants = participantsData || [];
-  const votes = votesData || [];
-  const adminIdFromQuery = searchParams.admin || null;
-
   return (
-    <RoomClient
-      roomId={roomId}
-      initialRoom={room}
-      initialParticipants={participants}
-      initialVotes={votes}
-      adminIdFromQuery={adminIdFromQuery}
-    />
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <RoomClient roomId={roomId} adminIdFromQuery={admin} />
+    </HydrationBoundary>
   );
 }

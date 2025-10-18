@@ -11,7 +11,7 @@ import type { Room } from '@/types';
 
 interface JoinRoomFormProps {
   roomId: string;
-  room: Room;
+  room: Room | undefined;
   isAdmin: boolean;
   currentParticipantId: string | null;
   onJoined: (participantId: string) => void;

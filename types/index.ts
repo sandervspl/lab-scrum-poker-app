@@ -1,3 +1,4 @@
+/** @deprecated */
 export interface Room {
   id: string;
   admin_id: string;
@@ -6,6 +7,7 @@ export interface Room {
   room_name?: string; // Added optional room_name field
 }
 
+/** @deprecated */
 export interface Participant {
   id: string;
   room_id: string;
@@ -14,6 +16,7 @@ export interface Participant {
   joined_at: string;
 }
 
+/** @deprecated */
 export interface Vote {
   id: string;
   room_id: string;

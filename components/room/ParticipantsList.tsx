@@ -13,7 +13,7 @@ import { AdminControls } from './AdminControls';
 interface ParticipantsListProps {
   participants: Participant[];
   votes: Vote[];
-  room: Room;
+  room: Room | undefined;
   currentParticipantId: string | null;
   isAdmin: boolean;
   averageVote: string | null;
@@ -33,7 +33,11 @@ export function ParticipantsList({
   onToggleVotes,
   onResetVotes,
 }: ParticipantsListProps) {
-  const sortedParticipants = sortParticipantsByVote(participants, votes, room.votes_revealed);
+  const sortedParticipants = sortParticipantsByVote(
+    participants,
+    votes,
+    room?.votes_revealed ?? false,
+  );
 
   return (
     <Card>
@@ -79,7 +83,7 @@ export function ParticipantsList({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {room.votes_revealed && hasVoted ? (
+                  {room?.votes_revealed && hasVoted ? (
                     <Badge variant="secondary" className="px-3 py-1 text-base font-semibold">
                       {vote.vote_value}
                     </Badge>

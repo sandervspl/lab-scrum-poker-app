@@ -1,9 +1,15 @@
 'use client';
 
-import { experimental_useEffectEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import {
+  useParticipantCheckQuery,
+  useParticipantsQuery,
+  useRoomQuery,
+  useVotesQuery,
+} from '@/lib/queries/room-queries';
 import { allVotesMatch, calculateAverage, randomInRange } from '@/lib/room-utils';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import type { Participant, Room, Vote } from '@/types';
+import { useQueryClient } from '@tanstack/react-query';
 import confetti from 'canvas-confetti';
 
 import { JoinRoomForm } from './JoinRoomForm';
@@ -13,28 +19,29 @@ import { VotingCards } from './VotingCards';
 
 interface RoomClientProps {
   roomId: string;
-  initialRoom: Room;
-  initialParticipants: Participant[];
-  initialVotes: Vote[];
-  adminIdFromQuery: string | null;
+  adminIdFromQuery: string | undefined;
 }
 
-export function RoomClient({
-  roomId,
-  initialRoom,
-  initialParticipants,
-  initialVotes,
-  adminIdFromQuery,
-}: RoomClientProps) {
+export function RoomClient({ roomId, adminIdFromQuery }: RoomClientProps) {
   const supabase = getSupabaseBrowserClient();
-  const [room, setRoom] = useState<Room>(initialRoom);
-  const [participants, setParticipants] = useState<Participant[]>(initialParticipants);
-  const [votes, setVotes] = useState<Vote[]>(initialVotes);
+  const queryClient = useQueryClient();
+
+  const { data: room } = useRoomQuery(roomId);
+  const { data: participants = [] } = useParticipantsQuery(roomId);
+  const { data: votes = [] } = useVotesQuery(roomId);
+
   const [currentParticipantId, setCurrentParticipantId] = useState<string | null>(null);
   const [hasJoined, setHasJoined] = useState(false);
   const hasCheckedJoined = useRef(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasCelebrated, setHasCelebrated] = useState(false);
+
+  // Check if participant has joined
+  const { data: participantData } = useParticipantCheckQuery(
+    roomId,
+    currentParticipantId ?? '',
+    !!currentParticipantId && !hasCheckedJoined.current,
+  );
 
   // Initialize participant ID from query param or localStorage
   useEffect(() => {
@@ -51,92 +58,69 @@ export function RoomClient({
     }
   }, [roomId, adminIdFromQuery]);
 
-  const fetchRoom = useCallback(async () => {
-    const { data, error } = await supabase.from('rooms').select('*').eq('id', roomId).single();
+  // Handle participant check result
+  useEffect(() => {
+    if (!currentParticipantId || hasCheckedJoined.current) return;
 
-    if (error) {
-      console.error('[v0] Error fetching room:', error);
-      return;
+    if (participantData) {
+      setHasJoined(true);
+    } else if (participantData === null) {
+      setHasJoined(false);
     }
 
-    setRoom(data);
-  }, [roomId, supabase]);
-
-  const fetchParticipants = useCallback(async () => {
-    console.log('[v0] Fetching participants');
-    const { data, error } = await supabase
-      .from('participants')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('joined_at', { ascending: true });
-
-    if (error) {
-      console.error('[v0] Error fetching participants:', error);
-      return;
+    if (room && room.admin_id === currentParticipantId) {
+      setIsAdmin(true);
+      localStorage.setItem(`admin_${roomId}`, 'true');
     }
 
-    console.log('[v0] Participants fetched:', data);
-    setParticipants(data);
-  }, [roomId, supabase]);
-
-  const fetchVotes = useCallback(async () => {
-    console.log('[v0] Fetching votes');
-    const { data, error } = await supabase.from('votes').select('*').eq('room_id', roomId);
-
-    if (error) {
-      console.error('[v0] Error fetching votes:', error);
-      return;
-    }
-
-    console.log('[v0] Votes fetched:', data);
-    setVotes(data);
-  }, [roomId, supabase]);
+    hasCheckedJoined.current = true;
+  }, [participantData, currentParticipantId, room, roomId]);
 
   // Subscribe to realtime changes
-  const subscribeToEvents = experimental_useEffectEvent(() => {
+  const subscribeToEvents = useEffectEvent(() => {
     const channel = supabase
       .channel(`room:${roomId}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Room updated:', payload);
           if (payload.new) {
-            setRoom(payload.new as Room);
-            fetchVotes();
+            queryClient.invalidateQueries({ queryKey: ['room', roomId] });
+            queryClient.invalidateQueries({ queryKey: ['votes', roomId] });
           }
         },
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'participants', filter: `room_id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Participants changed:', payload);
-          fetchParticipants();
+          queryClient.invalidateQueries({ queryKey: ['participants', roomId] });
         },
       )
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Vote inserted:', payload);
-          fetchVotes();
+          queryClient.invalidateQueries({ queryKey: ['votes', roomId] });
         },
       )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Vote updated:', payload);
-          fetchVotes();
+          queryClient.invalidateQueries({ queryKey: ['votes', roomId] });
         },
       )
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
-        (payload) => {
+        (payload: any) => {
           console.log('[v0] Vote deleted:', payload);
-          fetchVotes();
+          queryClient.invalidateQueries({ queryKey: ['votes', roomId] });
         },
       )
       .subscribe();
@@ -151,37 +135,6 @@ export function RoomClient({
       supabase.removeChannel(channel);
     };
   }, []);
-
-  // Check if participant has joined
-  useEffect(() => {
-    if (currentParticipantId) {
-      const checkParticipant = async () => {
-        const { data } = await supabase
-          .from('participants')
-          .select('*')
-          .eq('room_id', roomId)
-          .eq('participant_id', currentParticipantId)
-          .single();
-
-        if (data) {
-          setHasJoined(true);
-          await fetchParticipants();
-          await fetchVotes();
-        } else {
-          setHasJoined(false);
-        }
-
-        if (room && room.admin_id === currentParticipantId) {
-          setIsAdmin(true);
-          localStorage.setItem(`admin_${roomId}`, 'true');
-        }
-
-        hasCheckedJoined.current = true;
-      };
-
-      checkParticipant();
-    }
-  }, [currentParticipantId, roomId, supabase, room, fetchParticipants, fetchVotes]);
 
   // Confetti functions
   function launchConfetti() {
@@ -204,8 +157,8 @@ export function RoomClient({
   const handleJoined = (participantId: string) => {
     setCurrentParticipantId(participantId);
     setHasJoined(true);
-    fetchParticipants();
-    fetchVotes();
+    queryClient.invalidateQueries({ queryKey: ['participants', roomId] });
+    queryClient.invalidateQueries({ queryKey: ['votes', roomId] });
   };
 
   const castVote = async (value: string) => {
@@ -215,28 +168,6 @@ export function RoomClient({
     }
 
     console.log('[v0] Casting vote:', { roomId, participantId: currentParticipantId, value });
-
-    const existingVoteIndex = votes.findIndex((v) => v.participant_id === currentParticipantId);
-
-    const previousVotes = [...votes];
-
-    if (existingVoteIndex >= 0) {
-      const updatedVotes = [...votes];
-      updatedVotes[existingVoteIndex] = {
-        ...updatedVotes[existingVoteIndex],
-        vote_value: value,
-      };
-      setVotes(updatedVotes);
-    } else {
-      const newVote: Vote = {
-        id: crypto.randomUUID(),
-        room_id: roomId,
-        participant_id: currentParticipantId,
-        vote_value: value,
-        voted_at: new Date().toISOString(),
-      };
-      setVotes([...votes, newVote]);
-    }
 
     const { data: existingVote } = await supabase
       .from('votes')
@@ -255,10 +186,9 @@ export function RoomClient({
 
       if (error) {
         console.error('[v0] Error updating vote:', error);
-        setVotes(previousVotes);
       } else {
         console.log('[v0] Vote updated successfully');
-        await fetchVotes();
+        queryClient.invalidateQueries({ queryKey: ['votes', roomId] });
       }
     } else {
       console.log('[v0] Inserting new vote');
@@ -270,10 +200,9 @@ export function RoomClient({
 
       if (error) {
         console.error('[v0] Error inserting vote:', error);
-        setVotes(previousVotes);
       } else {
         console.log('[v0] Vote inserted successfully');
-        await fetchVotes();
+        queryClient.invalidateQueries({ queryKey: ['votes', roomId] });
       }
     }
   };
@@ -291,7 +220,7 @@ export function RoomClient({
       return;
     }
 
-    await fetchRoom();
+    queryClient.invalidateQueries({ queryKey: ['room', roomId] });
     if (newValue && !hasCelebrated && allVotesMatch(votes, participants)) {
       shootConfetti();
       setHasCelebrated(true);
@@ -311,8 +240,8 @@ export function RoomClient({
 
     await supabase.from('rooms').update({ votes_revealed: false }).eq('id', roomId);
 
-    await fetchVotes();
-    await fetchRoom();
+    queryClient.invalidateQueries({ queryKey: ['votes', roomId] });
+    queryClient.invalidateQueries({ queryKey: ['room', roomId] });
     setHasCelebrated(false);
   };
 
@@ -355,8 +284,8 @@ export function RoomClient({
     }
 
     console.log('[v0] Participant removed successfully');
-    await fetchParticipants();
-    await fetchVotes();
+    queryClient.invalidateQueries({ queryKey: ['participants', roomId] });
+    queryClient.invalidateQueries({ queryKey: ['votes', roomId] });
   };
 
   const currentVote = votes.find((v) => v.participant_id === currentParticipantId);
@@ -382,7 +311,7 @@ export function RoomClient({
     <div className="from-background via-background to-muted/20 min-h-[calc(100vh-3.5rem)] bg-gradient-to-br p-4 md:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
         {/* Header */}
-        <RoomHeader room={room} roomId={roomId} isAdmin={isAdmin} onRoomUpdated={setRoom} />
+        <RoomHeader room={room} roomId={roomId} isAdmin={isAdmin} />
 
         {/* Voting Cards */}
         <VotingCards currentVote={currentVote} onCastVote={castVote} />

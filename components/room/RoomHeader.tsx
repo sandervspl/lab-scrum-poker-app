@@ -6,21 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { updateRoomNameInHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import type { Room } from '@/types';
+import { Database } from '@/lib/supabase/database.types';
+import { useQueryClient } from '@tanstack/react-query';
 import { Check, Copy, Pencil } from 'lucide-react';
 
 interface RoomHeaderProps {
-  room: Room;
+  room: Database['public']['Tables']['rooms']['Row'];
   roomId: string;
   isAdmin: boolean;
-  onRoomUpdated: (room: Room) => void;
 }
 
-export function RoomHeader({ room, roomId, isAdmin, onRoomUpdated }: RoomHeaderProps) {
+export function RoomHeader({ room, roomId, isAdmin }: RoomHeaderProps) {
   const [copied, setCopied] = useState(false);
   const [isEditingRoomName, setIsEditingRoomName] = useState(false);
   const [editedRoomName, setEditedRoomName] = useState('');
   const supabase = getSupabaseBrowserClient();
+  const queryClient = useQueryClient();
 
   const copyRoomLink = () => {
     const url = window.location.origin + `/room/${roomId}`;
@@ -47,7 +48,8 @@ export function RoomHeader({ room, roomId, isAdmin, onRoomUpdated }: RoomHeaderP
       alert('Failed to update room name');
     } else if (data) {
       updateRoomNameInHistory(roomId, editedRoomName.trim());
-      onRoomUpdated(data);
+      // @TODO: How to invalidate cache-helper queries?
+      queryClient.invalidateQueries({ queryKey: ['room', roomId] });
     }
 
     setIsEditingRoomName(false);
