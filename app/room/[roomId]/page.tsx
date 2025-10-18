@@ -18,7 +18,7 @@ export default async function RoomPage({ params }: Props) {
   const cookieStore = await cookies();
   const supabase = getSupabaseServerClient(cookieStore);
   const queryClient = new QueryClient();
-  const participantId = cookieStore.get(PARTICIPANT_COOKIE)!.value;
+  const participantId = cookieStore.get(PARTICIPANT_COOKIE)?.value;
 
   const { data: room, error: roomError } = await queryClient.ensureQueryData(
     roomQueryOptions(supabase, roomId),
