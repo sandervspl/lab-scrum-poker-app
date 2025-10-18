@@ -42,57 +42,14 @@ export function RoomClient({ roomId, participantId }: Props) {
     );
   }
 
-  const isAdmin = participantId === room.data?.admin_id;
-
   // Subscribe to realtime changes
   useRealtime(roomId);
+
+  const isAdmin = participantId === room.data?.admin_id;
 
   function handleJoined() {
     // Refetch all room queries
     queryClient.invalidateQueries({ queryKey: ['room'] });
-  }
-
-  async function removeParticipant(participantIdToRemove: string) {
-    if (!isAdmin) return;
-
-    // Prevent admin from removing themselves
-    if (participantIdToRemove === participantId) {
-      alert('You cannot remove yourself from the room');
-      return;
-    }
-
-    const confirmRemove = confirm('Are you sure you want to remove this participant?');
-    if (!confirmRemove) return;
-
-    console.log('[v0] Removing participant:', participantId);
-
-    // Delete participant's votes first
-    const { error: votesError } = await supabase
-      .from('votes')
-      .delete()
-      .eq('room_id', roomId)
-      .eq('participant_id', participantId);
-
-    if (votesError) {
-      console.error('[v0] Error deleting participant votes:', votesError);
-    }
-
-    // Delete participant
-    const { error: participantError } = await supabase
-      .from('participants')
-      .delete()
-      .eq('room_id', roomId)
-      .eq('participant_id', participantId);
-
-    if (participantError) {
-      console.error('[v0] Error removing participant:', participantError);
-      alert('Failed to remove participant');
-      return;
-    }
-
-    console.log('[v0] Participant removed successfully');
-    queryClient.invalidateQueries(participantsQueryOptions(supabase, roomId));
-    queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
   }
 
   const averageVote = votes.data ? calculateAverage(votes.data) : null;
@@ -122,10 +79,9 @@ export function RoomClient({ roomId, participantId }: Props) {
           participants={participants.data ?? []}
           votes={votes.data ?? []}
           room={room.data}
-          currentParticipantId={participantId}
+          userId={participantId}
           isAdmin={isAdmin}
           averageVote={averageVote}
-          onRemoveParticipant={removeParticipant}
         />
       </div>
     </div>

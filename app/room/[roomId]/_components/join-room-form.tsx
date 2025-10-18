@@ -43,7 +43,7 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId, onJo
       return;
     }
 
-    addRoomToHistory(roomId, isAdmin, name.trim(), room?.room_name || undefined);
+    addRoomToHistory(roomId, isAdmin, participantId, name.trim(), room?.room_name || undefined);
     onJoined(participantId);
   }
 

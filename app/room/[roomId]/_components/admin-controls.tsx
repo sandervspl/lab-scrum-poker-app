@@ -1,9 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Database } from '@/lib/supabase/database.types';
-import { Eye, EyeOff } from 'lucide-react';
 
 import { ResetVotesButton } from './reset-votes-button';
 import { ViewVotesButton } from './view-votes-button';

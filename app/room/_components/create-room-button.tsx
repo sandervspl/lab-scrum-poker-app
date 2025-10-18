@@ -39,7 +39,8 @@ export function CreateRoomButton() {
   function handleCreateRoom() {
     createRoom.mutateAsync().then((room) => {
       if (room) {
-        addRoomToHistory(room.id, true);
+        const participantId = Cookies.get(PARTICIPANT_COOKIE)!;
+        addRoomToHistory(room.id, true, participantId);
         router.push(`/room/${room.id}`);
       }
     });

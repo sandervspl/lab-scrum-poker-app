@@ -1,5 +1,3 @@
-import type { Participant, Vote } from '@/types';
-
 import { Database } from './supabase/database.types';
 
 export function calculateAverage(

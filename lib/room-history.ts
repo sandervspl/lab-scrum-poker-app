@@ -1,23 +1,30 @@
 import Cookies from 'js-cookie';
 
-import { ROOMS_COOKIE } from './cookies';
+import { PARTICIPANT_COOKIE, ROOMS_COOKIE } from './cookies';
 
 export interface RoomHistoryItem {
   roomId: string;
+  participantId: string;
   isAdmin: boolean;
   lastJoined: number;
   participantName?: string;
   roomName?: string;
 }
 
-export function getRoomHistory(cookie?: string): RoomHistoryItem[] {
+export function getRoomHistory(cookie?: string, _participantId?: string): RoomHistoryItem[] {
   try {
     const stored = cookie ?? Cookies.get(ROOMS_COOKIE);
-    if (!stored) return [];
+    const participantId = _participantId ?? Cookies.get(PARTICIPANT_COOKIE)!;
+    if (!stored || !participantId) return [];
 
     const rooms = JSON.parse(stored) as RoomHistoryItem[];
-    // Sort by most recent first
-    return rooms.sort((a, b) => b.lastJoined - a.lastJoined);
+    return (
+      rooms
+        // Only show rooms for the current participant id (cookie could've expired or removed)
+        .filter((room) => room.participantId === participantId)
+        // Sort by most recent first
+        .sort((a, b) => b.lastJoined - a.lastJoined)
+    );
   } catch (error) {
     console.error('Error reading room history:', error);
     return [];
@@ -27,6 +34,7 @@ export function getRoomHistory(cookie?: string): RoomHistoryItem[] {
 export function addRoomToHistory(
   roomId: string,
   isAdmin: boolean,
+  participantId: string,
   participantName?: string,
   roomName?: string,
 ) {
@@ -40,6 +48,7 @@ export function addRoomToHistory(
     const newEntry: RoomHistoryItem = {
       roomId,
       isAdmin,
+      participantId,
       lastJoined: Date.now(),
       participantName,
       roomName,

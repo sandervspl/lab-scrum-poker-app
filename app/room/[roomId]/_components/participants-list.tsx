@@ -10,25 +10,24 @@ import type { Participant, Room, Vote } from '@/types';
 import { Trash2, Users } from 'lucide-react';
 
 import { AdminControls } from './admin-controls';
+import { RemoveParticipantButton } from './remove-participant-button';
 
 interface ParticipantsListProps {
   participants: Database['public']['Tables']['participants']['Row'][];
   votes: Database['public']['Tables']['votes']['Row'][];
   room: Database['public']['Tables']['rooms']['Row'];
-  currentParticipantId: string | null;
+  userId: string | null;
   isAdmin: boolean;
   averageVote: string | null;
-  onRemoveParticipant: (participantId: string) => void;
 }
 
 export function ParticipantsList({
   participants,
   votes,
   room,
-  currentParticipantId,
+  userId,
   isAdmin,
   averageVote,
-  onRemoveParticipant,
 }: ParticipantsListProps) {
   const sortedParticipants = sortParticipantsByVote(
     participants,
@@ -69,7 +68,7 @@ export function ParticipantsList({
                   </div>
                   <div>
                     <p className="font-medium">{participant.name}</p>
-                    {participant.participant_id === currentParticipantId && (
+                    {participant.participant_id === userId && (
                       <p className="text-muted-foreground text-xs">You</p>
                     )}
                   </div>
@@ -84,15 +83,8 @@ export function ParticipantsList({
                   ) : (
                     <Badge variant="outline">Waiting</Badge>
                   )}
-                  {isAdmin && participant.participant_id !== currentParticipantId && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive h-8 w-8"
-                      onClick={() => onRemoveParticipant(participant.participant_id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  {isAdmin && participant.participant_id !== userId && (
+                    <RemoveParticipantButton participantId={participant.participant_id} />
                   )}
                 </div>
               </div>
