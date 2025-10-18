@@ -33,6 +33,8 @@ export function RoomClient({ roomId, participantId }: Props) {
   const { data: participants } = useSuspenseQuery(participantsQueryOptions(supabase, roomId));
   const { data: votes } = useSuspenseQuery(votesQueryOptions(supabase, roomId));
 
+  const isAdmin = participantId === room.data?.admin_id;
+
   if (!room.data || !participants.data || !votes.data) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -44,11 +46,6 @@ export function RoomClient({ roomId, participantId }: Props) {
 
   // Subscribe to realtime changes
   useRealtime(roomId);
-
-  const isAdmin = participantId === room.data?.admin_id;
-
-  const averageVote = votes.data ? calculateAverage(votes.data) : null;
-
   if (!participants.data.some((p) => p.participant_id === participantId)) {
     return (
       <JoinRoomForm
@@ -75,7 +72,6 @@ export function RoomClient({ roomId, participantId }: Props) {
           room={room.data}
           userId={participantId}
           isAdmin={isAdmin}
-          averageVote={averageVote}
         />
       </div>
     </div>

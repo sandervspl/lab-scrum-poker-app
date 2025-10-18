@@ -1,13 +1,11 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { sortParticipantsByVote } from '@/lib/room-utils';
 import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
-import type { Participant, Room, Vote } from '@/types';
-import { Trash2, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 
 import { AdminControls } from './admin-controls';
 import { RemoveParticipantButton } from './remove-participant-button';
@@ -18,7 +16,6 @@ interface ParticipantsListProps {
   room: Database['public']['Tables']['rooms']['Row'];
   userId: string | null;
   isAdmin: boolean;
-  averageVote: string | null;
 }
 
 export function ParticipantsList({
@@ -27,7 +24,6 @@ export function ParticipantsList({
   room,
   userId,
   isAdmin,
-  averageVote,
 }: ParticipantsListProps) {
   const sortedParticipants = sortParticipantsByVote(
     participants,
@@ -42,7 +38,7 @@ export function ParticipantsList({
           <Users className="h-5 w-5" />
           Participants ({participants.length})
         </CardTitle>
-        <AdminControls room={room} averageVote={averageVote} />
+        <AdminControls room={room} />
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
