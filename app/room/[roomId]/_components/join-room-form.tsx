@@ -8,18 +8,19 @@ import { Label } from '@/components/ui/label';
 import { addRoomToHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
+import { useQueryClient } from '@tanstack/react-query';
 
 type Props = {
   roomId: string;
   room: Database['public']['Tables']['rooms']['Row'] | null;
   isAdmin: boolean;
   currentParticipantId: string | null;
-  onJoined: (participantId: string) => void;
 };
 
-export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId, onJoined }: Props) {
+export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Props) {
   const [name, setName] = useState('');
   const supabase = getSupabaseBrowserClient();
+  const queryClient = useQueryClient();
 
   async function joinRoom() {
     if (!name.trim()) return;
@@ -44,7 +45,9 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId, onJo
     }
 
     addRoomToHistory(roomId, isAdmin, participantId, name.trim(), room?.room_name || undefined);
-    onJoined(participantId);
+
+    // Refetch all room queries
+    queryClient.invalidateQueries({ queryKey: ['room'] });
   }
 
   return (

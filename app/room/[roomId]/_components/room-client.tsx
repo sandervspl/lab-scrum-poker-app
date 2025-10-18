@@ -47,11 +47,6 @@ export function RoomClient({ roomId, participantId }: Props) {
 
   const isAdmin = participantId === room.data?.admin_id;
 
-  function handleJoined() {
-    // Refetch all room queries
-    queryClient.invalidateQueries({ queryKey: ['room'] });
-  }
-
   const averageVote = votes.data ? calculateAverage(votes.data) : null;
 
   if (!participants.data.some((p) => p.participant_id === participantId)) {
@@ -61,7 +56,6 @@ export function RoomClient({ roomId, participantId }: Props) {
         room={room.data}
         isAdmin={isAdmin}
         currentParticipantId={participantId}
-        onJoined={handleJoined}
       />
     );
   }
