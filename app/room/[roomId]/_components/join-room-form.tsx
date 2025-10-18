@@ -8,23 +8,16 @@ import { Label } from '@/components/ui/label';
 import { addRoomToHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
-import type { Room } from '@/types';
 
-interface JoinRoomFormProps {
+type Props = {
   roomId: string;
   room: Database['public']['Tables']['rooms']['Row'] | null;
   isAdmin: boolean;
   currentParticipantId: string | null;
   onJoined: (participantId: string) => void;
-}
+};
 
-export function JoinRoomForm({
-  roomId,
-  room,
-  isAdmin,
-  currentParticipantId,
-  onJoined,
-}: JoinRoomFormProps) {
+export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId, onJoined }: Props) {
   const [name, setName] = useState('');
   const supabase = getSupabaseBrowserClient();
 

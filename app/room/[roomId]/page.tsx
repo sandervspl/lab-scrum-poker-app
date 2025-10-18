@@ -1,28 +1,23 @@
 import { Suspense } from 'react';
 import { cookies } from 'next/headers';
-import { RoomClient } from '@/components/room/RoomClient';
+import { RoomClient } from '@/app/room/[roomId]/_components/room-client';
 import { PARTICIPANT_COOKIE } from '@/lib/cookies';
-import { getParticipants, getRoom, getVotes } from '@/lib/queries/room-db';
 import { roomQueryOptions } from '@/lib/queries/room-queries';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
-import { prefetchQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import { Loader2Icon } from 'lucide-react';
 
-interface RoomPageProps {
+type Props = {
   params: Promise<{ roomId: string }>;
-  searchParams: Promise<{ admin?: string }>;
-}
+};
 
-export default async function RoomPage({ params, searchParams }: RoomPageProps) {
+export default async function RoomPage({ params }: Props) {
   const { roomId } = await params;
-  const { admin } = await searchParams;
   const cookieStore = await cookies();
   const supabase = getSupabaseServerClient(cookieStore);
   const queryClient = new QueryClient();
   const participantId = cookieStore.get(PARTICIPANT_COOKIE)!.value;
 
-  // Fetch initial data server-side
   const { data: room, error: roomError } = await queryClient.ensureQueryData(
     roomQueryOptions(supabase, roomId),
   );
@@ -44,7 +39,7 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
           </div>
         }
       >
-        <RoomClient roomId={roomId} adminIdFromQuery={admin} participantId={participantId} />
+        <RoomClient roomId={roomId} participantId={participantId} />
       </Suspense>
     </HydrationBoundary>
   );

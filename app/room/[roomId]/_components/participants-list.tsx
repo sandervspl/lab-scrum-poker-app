@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import type { Participant, Room, Vote } from '@/types';
 import { Trash2, Users } from 'lucide-react';
 
-import { AdminControls } from './AdminControls';
+import { AdminControls } from './admin-controls';
 
 interface ParticipantsListProps {
   participants: Database['public']['Tables']['participants']['Row'][];
