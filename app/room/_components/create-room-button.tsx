@@ -13,7 +13,6 @@ import { Loader2Icon } from 'lucide-react';
 export function CreateRoomButton() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-
   const createRoom = useMutation({
     mutationFn: async () => {
       const supabase = getSupabaseBrowserClient();
@@ -35,6 +34,7 @@ export function CreateRoomButton() {
       return room;
     },
   });
+  const isLoading = createRoom.isPending || createRoom.isSuccess;
 
   function handleCreateRoom() {
     createRoom.mutateAsync().then((room) => {
@@ -49,11 +49,11 @@ export function CreateRoomButton() {
     <div className="space-y-2">
       <Button
         onClick={handleCreateRoom}
-        disabled={createRoom.isPending}
+        disabled={isLoading}
         className="h-12 w-full text-base font-medium"
         size="lg"
       >
-        {createRoom.isPending ? (
+        {isLoading ? (
           <>
             <Loader2Icon className="mr-2 size-5 animate-spin" />
             Creating Room...
