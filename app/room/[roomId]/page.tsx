@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { cookies } from 'next/headers';
 import { RoomClient } from '@/components/room/RoomClient';
+import { PARTICIPANT_COOKIE } from '@/lib/cookies';
 import { getParticipants, getRoom, getVotes } from '@/lib/queries/room-db';
 import { roomQueryOptions } from '@/lib/queries/room-queries';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
@@ -19,6 +20,7 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
   const cookieStore = await cookies();
   const supabase = getSupabaseServerClient(cookieStore);
   const queryClient = new QueryClient();
+  const participantId = cookieStore.get(PARTICIPANT_COOKIE)!.value;
 
   // Fetch initial data server-side
   const { data: room, error: roomError } = await queryClient.ensureQueryData(
@@ -42,7 +44,7 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
           </div>
         }
       >
-        <RoomClient roomId={roomId} adminIdFromQuery={admin} />
+        <RoomClient roomId={roomId} adminIdFromQuery={admin} participantId={participantId} />
       </Suspense>
     </HydrationBoundary>
   );

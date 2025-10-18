@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   participantQueryOptions,
   participantsQueryOptions,
@@ -14,6 +15,7 @@ import confetti from 'canvas-confetti';
 
 // TODO: Move to a shared component
 import Loader from '../../app/room/[roomId]/loading';
+import { Button } from '../ui/button';
 import { JoinRoomForm } from './JoinRoomForm';
 import { ParticipantsList } from './ParticipantsList';
 import { RoomHeader } from './RoomHeader';
@@ -22,45 +24,32 @@ import { VotingCards } from './VotingCards';
 interface RoomClientProps {
   roomId: string;
   adminIdFromQuery: string | undefined;
+  participantId: string;
 }
 
-export function RoomClient({ roomId, adminIdFromQuery }: RoomClientProps) {
+export function RoomClient({ roomId, participantId }: RoomClientProps) {
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { data: room } = useSuspenseQuery(roomQueryOptions(supabase, roomId));
   const { data: participants } = useSuspenseQuery(participantsQueryOptions(supabase, roomId));
   const { data: votes } = useSuspenseQuery(votesQueryOptions(supabase, roomId));
 
-  const [participantIdStorage, setParticipantIdStorage] = useState<string | null>(null);
-  const [hasJoinedBefore, setHasJoinedBefore] = useState<boolean | null>(null);
-  const [hasCheckedJoinedBefore, setHasCheckedJoinedBefore] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  if (!room.data || !participants.data || !votes.data) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted-foreground text-2xl font-bold">Oops, something went wrong</p>
+        <Button onClick={() => router.refresh()}>Reload page</Button>
+      </div>
+    );
+  }
+
+  const isAdmin = participantId === room.data?.admin_id;
   const [hasCelebrated, setHasCelebrated] = useState(false);
 
   // Get participant data
-  const { data: participant } = useQuery(
-    participantQueryOptions(supabase, roomId, participantIdStorage),
-  );
-
-  // Admin check
-  if (
-    participant?.data?.id &&
-    room.data?.admin_id &&
-    participant.data.id === room.data.admin_id &&
-    !isAdmin
-  ) {
-    setIsAdmin(true);
-  }
-
-  // Has joined before check
-  if (hasJoinedBefore === null) {
-    if (participantIdStorage) {
-      setHasJoinedBefore(true);
-    } else if (hasCheckedJoinedBefore) {
-      setHasJoinedBefore(false);
-    }
-  }
+  const { data: participant } = useQuery(participantQueryOptions(supabase, roomId, participantId));
 
   // Subscribe to realtime changes
   const subscribeToEvents = useEffectEvent(() => {
@@ -123,34 +112,6 @@ export function RoomClient({ roomId, adminIdFromQuery }: RoomClientProps) {
     };
   }, []);
 
-  // Set participant ID from query param or localStorage
-  useEffect(() => {
-    if (adminIdFromQuery) {
-      setParticipantIdStorage(adminIdFromQuery);
-      localStorage.setItem(`participant_${roomId}`, adminIdFromQuery);
-      // localStorage.setItem(`admin_${roomId}`, 'true');
-    } else {
-      const storedId = localStorage.getItem(`participant_${roomId}`);
-      if (storedId) {
-        setParticipantIdStorage(storedId);
-      }
-    }
-
-    setHasCheckedJoinedBefore(true);
-  }, [roomId, adminIdFromQuery]);
-
-  // Handle is admin check
-  // useEffect(() => {
-  //   if (participantIdStorage) {
-  //     return;
-  //   }
-
-  //   if (room.data?.admin_id === participantIdStorage) {
-  //     setIsAdmin(true);
-  //     localStorage.setItem(`admin_${roomId}`, 'true');
-  //   }
-  // }, [participantIdStorage, room.data?.admin_id, roomId]);
-
   // Confetti functions
   function launchConfetti() {
     confetti({
@@ -169,58 +130,9 @@ export function RoomClient({ roomId, adminIdFromQuery }: RoomClientProps) {
     launchConfetti();
   }
 
-  function handleJoined(participantId: string) {
-    setParticipantIdStorage(participantId);
-    setHasJoinedBefore(true);
-
+  function handleJoined() {
     // Refetch all room queries
     queryClient.invalidateQueries({ queryKey: ['room'] });
-  }
-
-  async function castVote(value: string) {
-    if (!participantIdStorage) {
-      console.log('[v0] Cannot cast vote: no participant ID');
-      return;
-    }
-
-    console.log('[v0] Casting vote:', { roomId, participantId: participantIdStorage, value });
-
-    const { data: existingVote } = await supabase
-      .from('votes')
-      .select('*')
-      .eq('room_id', roomId)
-      .eq('participant_id', participantIdStorage)
-      .single();
-
-    if (existingVote) {
-      console.log('[v0] Updating existing vote');
-      const { error } = await supabase
-        .from('votes')
-        .update({ vote_value: value })
-        .eq('room_id', roomId)
-        .eq('participant_id', participantIdStorage);
-
-      if (error) {
-        console.error('[v0] Error updating vote:', error);
-      } else {
-        console.log('[v0] Vote updated successfully');
-        queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
-      }
-    } else {
-      console.log('[v0] Inserting new vote');
-      const { error } = await supabase.from('votes').insert({
-        room_id: roomId,
-        participant_id: participantIdStorage,
-        vote_value: value,
-      });
-
-      if (error) {
-        console.error('[v0] Error inserting vote:', error);
-      } else {
-        console.log('[v0] Vote inserted successfully');
-        queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
-      }
-    }
   }
 
   async function toggleVotesVisibility() {
@@ -267,11 +179,11 @@ export function RoomClient({ roomId, adminIdFromQuery }: RoomClientProps) {
     setHasCelebrated(false);
   }
 
-  async function removeParticipant(participantId: string) {
+  async function removeParticipant(participantIdToRemove: string) {
     if (!isAdmin) return;
 
     // Prevent admin from removing themselves
-    if (participantId === participantIdStorage) {
+    if (participantIdToRemove === participantId) {
       alert('You cannot remove yourself from the room');
       return;
     }
@@ -310,20 +222,15 @@ export function RoomClient({ roomId, adminIdFromQuery }: RoomClientProps) {
     queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
   }
 
-  const currentVote = votes.data?.find((v) => v.participant_id === participantIdStorage);
   const averageVote = votes.data ? calculateAverage(votes.data) : null;
 
-  if (!participantIdStorage && !hasCheckedJoinedBefore) {
-    return <Loader />;
-  }
-
-  if (hasCheckedJoinedBefore && !hasJoinedBefore) {
+  if (!participants.data.some((p) => p.participant_id === participantId)) {
     return (
       <JoinRoomForm
         roomId={roomId}
         room={room.data}
         isAdmin={isAdmin}
-        currentParticipantId={participantIdStorage}
+        currentParticipantId={participantId}
         onJoined={handleJoined}
       />
     );
@@ -335,15 +242,14 @@ export function RoomClient({ roomId, adminIdFromQuery }: RoomClientProps) {
         {/* Header */}
         <RoomHeader room={room.data} roomId={roomId} isAdmin={isAdmin} />
 
-        {/* Voting Cards */}
-        <VotingCards currentVote={currentVote} onCastVote={castVote} />
+        <VotingCards participantId={participantId} />
 
         {/* Participants and Votes */}
         <ParticipantsList
           participants={participants.data ?? []}
           votes={votes.data ?? []}
           room={room.data}
-          currentParticipantId={participantIdStorage}
+          currentParticipantId={participantId}
           isAdmin={isAdmin}
           averageVote={averageVote}
           onRemoveParticipant={removeParticipant}

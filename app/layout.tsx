@@ -7,6 +7,7 @@ import { GeistSans } from 'geist/font/sans';
 
 import './globals.css';
 
+import { cookies } from 'next/headers';
 import { Header } from '@/components/header';
 import { ThemeProvider } from '@/components/theme-provider';
 import { QueryProvider } from '@/lib/react-query-provider';

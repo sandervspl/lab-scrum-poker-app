@@ -50,7 +50,6 @@ export function JoinRoomForm({
       return;
     }
 
-    localStorage.setItem(`participant_${roomId}`, participantId);
     addRoomToHistory(roomId, isAdmin, name.trim(), room?.room_name || undefined);
     onJoined(participantId);
   }
