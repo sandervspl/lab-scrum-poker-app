@@ -52,11 +52,11 @@ export function CreateRoomButton() {
   }
 
   return (
-    <div className="space-y-2">
+    <div>
       <Button
         onClick={handleCreateRoom}
         disabled={isLoading}
-        className="h-12 w-full text-base font-medium"
+        className="mx-auto h-12 w-fit text-base font-medium"
         size="lg"
       >
         {isLoading ? (

@@ -1,9 +1,8 @@
 import type React from 'react';
 import type { Metadata } from 'next';
+import { Red_Hat_Text } from 'next/font/google';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Analytics } from '@vercel/analytics/next';
-import { GeistMono } from 'geist/font/mono';
-import { GeistSans } from 'geist/font/sans';
 
 import './globals.css';
 
@@ -21,6 +20,12 @@ export const metadata: Metadata = {
   },
 };
 
+const redHatText = Red_Hat_Text({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-red-hat-text',
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,7 +38,7 @@ export default function RootLayout({
           <script async crossOrigin="anonymous" src="https://tweakcn.com/live-preview.min.js" />
         )}
       </head>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`${redHatText.variable} font-sans`}>
         <QueryProvider>
           <ThemeProvider
             attribute="class"

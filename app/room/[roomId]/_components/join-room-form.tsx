@@ -73,7 +73,7 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Pr
     <div className="from-background via-background to-muted/20 flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gradient-to-br p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Join Room</CardTitle>
+          <CardTitle>Join Room {room?.room_name ? `"${room.room_name}"` : ''}</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
