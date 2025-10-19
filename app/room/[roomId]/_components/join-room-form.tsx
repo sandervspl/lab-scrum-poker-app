@@ -85,7 +85,7 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Pr
                   <FormItem>
                     <FormLabel>Your Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your name" {...field} />
+                      <Input placeholder="Enter your name" autoFocus {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
