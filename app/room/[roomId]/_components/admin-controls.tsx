@@ -24,11 +24,12 @@ export function AdminControls({ room }: Props) {
       {room?.votes_revealed && averageVote && (
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-sm">Average:</span>
-          <Badge variant="default" className="px-3 py-1 text-lg font-bold">
+          <Badge variant="default" className="px-3 py-0 text-lg font-bold">
             {averageVote}
           </Badge>
         </div>
       )}
+
       <ResetVotesButton />
       <ViewVotesButton room={room} />
     </div>
