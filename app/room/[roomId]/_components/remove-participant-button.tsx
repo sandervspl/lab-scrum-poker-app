@@ -3,16 +3,14 @@
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { PARTICIPANT_COOKIE } from '@/lib/cookies';
-import { participantsQueryOptions, votesQueryOptions } from '@/lib/queries/room-queries';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { Loader2Icon, Trash2Icon } from 'lucide-react';
 
 export function RemoveParticipantButton({ participantId }: { participantId: string }) {
   const { roomId } = useParams<{ roomId: string }>();
   const supabase = getSupabaseBrowserClient();
-  const queryClient = useQueryClient();
   const userId = Cookies.get(PARTICIPANT_COOKIE)!;
 
   const removeParticipant = useMutation({
@@ -51,9 +49,6 @@ export function RemoveParticipantButton({ participantId }: { participantId: stri
         alert('Failed to remove participant');
         return;
       }
-
-      queryClient.invalidateQueries(participantsQueryOptions(supabase, roomId));
-      queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
     },
   });
 
