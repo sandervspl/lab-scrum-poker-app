@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-import { CreateRoomButton } from './room/_components/create-room-button';
-import { Rooms } from './room/_components/rooms';
+import { CreateRoomButton } from './_components/create-room-button';
+import { Rooms } from './_components/rooms';
 
 export default function HomePage() {
   return (
