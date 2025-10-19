@@ -9,6 +9,7 @@ import './globals.css';
 
 import { Header } from '@/components/header';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/lib/react-query-provider';
 
 export const metadata: Metadata = {
@@ -46,6 +47,7 @@ export default function RootLayout({
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryProvider>
         <Analytics />
+        <Toaster />
       </body>
     </html>
   );
