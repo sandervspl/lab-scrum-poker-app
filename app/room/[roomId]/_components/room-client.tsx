@@ -52,7 +52,7 @@ export function RoomClient({ roomId, participantId }: Props) {
   }
 
   // Subscribe to room updates
-  useRealtime(roomId, participantId);
+  useRealtime(roomId);
 
   // Show name form if first time joining room
   if (!participants.data.some((p) => p.participant_id === participantId)) {

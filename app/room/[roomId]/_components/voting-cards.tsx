@@ -50,7 +50,7 @@ export function VotingCards({ participantId }: { participantId: string }) {
   }
 
   return (
-    <Card>
+    <Card className="shadow-none">
       <CardHeader>
         <CardTitle className="text-lg">Select Your Vote</CardTitle>
       </CardHeader>
