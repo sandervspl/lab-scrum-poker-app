@@ -57,7 +57,16 @@ export function useRealtime(roomId: string) {
           queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to room:', roomId);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Error subscribing to channel');
+        } else if (status === 'TIMED_OUT') {
+          console.error('Subscription timed out');
+        }
+      });
 
     return channel;
   });
