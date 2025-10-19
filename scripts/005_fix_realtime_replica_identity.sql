@@ -1,0 +1,5 @@
+-- Set REPLICA IDENTITY FULL on all tables to enable proper realtime updates
+ALTER TABLE rooms REPLICA IDENTITY FULL;
+ALTER TABLE participants REPLICA IDENTITY FULL;
+ALTER TABLE votes REPLICA IDENTITY FULL;
+
