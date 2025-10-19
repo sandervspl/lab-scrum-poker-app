@@ -1,23 +1,30 @@
+import Cookies from 'js-cookie';
+
+import { PARTICIPANT_COOKIE, ROOMS_COOKIE } from './cookies';
+
 export interface RoomHistoryItem {
   roomId: string;
+  participantId: string;
   isAdmin: boolean;
   lastJoined: number;
   participantName?: string;
   roomName?: string;
 }
 
-const STORAGE_KEY = 'scrum_poker_rooms';
-
-export function getRoomHistory(): RoomHistoryItem[] {
-  if (typeof window === 'undefined') return [];
-
+export function getRoomHistory(cookie?: string, _participantId?: string): RoomHistoryItem[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
+    const stored = cookie ?? Cookies.get(ROOMS_COOKIE);
+    const participantId = _participantId ?? Cookies.get(PARTICIPANT_COOKIE)!;
+    if (!stored || !participantId) return [];
 
     const rooms = JSON.parse(stored) as RoomHistoryItem[];
-    // Sort by most recent first
-    return rooms.sort((a, b) => b.lastJoined - a.lastJoined);
+    return (
+      rooms
+        // Only show rooms for the current participant id (cookie could've expired or removed)
+        .filter((room) => room.participantId === participantId)
+        // Sort by most recent first
+        .sort((a, b) => b.lastJoined - a.lastJoined)
+    );
   } catch (error) {
     console.error('Error reading room history:', error);
     return [];
@@ -27,11 +34,10 @@ export function getRoomHistory(): RoomHistoryItem[] {
 export function addRoomToHistory(
   roomId: string,
   isAdmin: boolean,
+  participantId: string,
   participantName?: string,
   roomName?: string,
 ) {
-  if (typeof window === 'undefined') return;
-
   try {
     const history = getRoomHistory();
 
@@ -42,6 +48,7 @@ export function addRoomToHistory(
     const newEntry: RoomHistoryItem = {
       roomId,
       isAdmin,
+      participantId,
       lastJoined: Date.now(),
       participantName,
       roomName,
@@ -52,34 +59,30 @@ export function addRoomToHistory(
     // Keep only the last 10 rooms
     const limited = filtered.slice(0, 10);
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(limited));
+    Cookies.set(ROOMS_COOKIE, JSON.stringify(limited));
   } catch (error) {
     console.error('Error saving room history:', error);
   }
 }
 
 export function removeRoomFromHistory(roomId: string) {
-  if (typeof window === 'undefined') return;
-
   try {
     const history = getRoomHistory();
     const filtered = history.filter((room) => room.roomId !== roomId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    Cookies.set(ROOMS_COOKIE, JSON.stringify(filtered));
   } catch (error) {
     console.error('Error removing room from history:', error);
   }
 }
 
 export function updateRoomNameInHistory(roomId: string, roomName: string) {
-  if (typeof window === 'undefined') return;
-
   try {
     const history = getRoomHistory();
     const room = history.find((r) => r.roomId === roomId);
 
     if (room) {
       room.roomName = roomName;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+      Cookies.set(ROOMS_COOKIE, JSON.stringify(history));
     }
   } catch (error) {
     console.error('Error updating room name in history:', error);

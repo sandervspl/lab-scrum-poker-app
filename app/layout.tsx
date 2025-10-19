@@ -1,14 +1,16 @@
 import type React from 'react';
 import type { Metadata } from 'next';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Analytics } from '@vercel/analytics/next';
 import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
 
 import './globals.css';
 
-import { Suspense } from 'react';
 import { Header } from '@/components/header';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
+import { QueryProvider } from '@/lib/react-query-provider';
 
 export const metadata: Metadata = {
   title: 'Scrum Poker',
@@ -26,14 +28,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {process.env.NODE_ENV !== 'production' && (
+          <script async crossOrigin="anonymous" src="https://tweakcn.com/live-preview.min.js" />
+        )}
+      </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <Suspense fallback={<div>Loading...</div>}>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             <Header />
             {children}
-          </Suspense>
-        </ThemeProvider>
+          </ThemeProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryProvider>
         <Analytics />
+        <Toaster />
       </body>
     </html>
   );
