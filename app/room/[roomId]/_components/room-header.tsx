@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { updateRoomNameInHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
-import { Check, Copy, Pencil } from 'lucide-react';
+import { Check, Copy, PencilIcon } from 'lucide-react';
 
 type Props = {
   room: Database['public']['Tables']['rooms']['Row'] | null;
@@ -18,7 +18,7 @@ type Props = {
 export function RoomHeader({ room, roomId, isAdmin }: Props) {
   const [copied, setCopied] = useState(false);
   const [isEditingRoomName, setIsEditingRoomName] = useState(false);
-  const [editedRoomName, setEditedRoomName] = useState('');
+  const [editedRoomName, setEditedRoomName] = useState(room?.room_name || '');
   const supabase = getSupabaseBrowserClient();
 
   function copyRoomLink() {
@@ -58,8 +58,10 @@ export function RoomHeader({ room, roomId, isAdmin }: Props) {
 
   return (
     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-      <div className="flex-1">
-        <h1 className="text-3xl font-bold tracking-tight">Scrum Poker</h1>
+      <div className="flex flex-1 items-center gap-2">
+        {isEditingRoomName ? null : (
+          <h1 className="text-3xl font-bold tracking-tight">{room?.room_name || 'Scrum Poker'}</h1>
+        )}
         <div className="mt-1 flex items-center gap-2">
           {isEditingRoomName ? (
             <Input
@@ -76,11 +78,7 @@ export function RoomHeader({ room, roomId, isAdmin }: Props) {
               autoFocus
               className="h-7 max-w-xs text-sm"
             />
-          ) : (
-            <p className="text-muted-foreground">
-              {room?.room_name || `Room: ${roomId.slice(0, 8)}`}
-            </p>
-          )}
+          ) : null}
           {isAdmin && !isEditingRoomName && (
             <Button
               onClick={startEditingRoomName}
@@ -89,7 +87,7 @@ export function RoomHeader({ room, roomId, isAdmin }: Props) {
               aria-label="Edit room name"
               variant="ghost"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <PencilIcon className="size-3.5" />
             </Button>
           )}
         </div>
