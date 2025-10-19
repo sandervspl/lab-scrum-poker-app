@@ -18,7 +18,7 @@ export function useRealtime(roomId: string) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
         (payload: any) => {
-          console.log('[v0] Room updated:', payload);
+          console.log('Room updated:', payload);
           if (payload.new) {
             queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
             queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
@@ -29,7 +29,7 @@ export function useRealtime(roomId: string) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'participants', filter: `room_id=eq.${roomId}` },
         (payload: any) => {
-          console.log('[v0] Participants changed:', payload);
+          console.log('Participants changed:', payload);
           queryClient.invalidateQueries(participantsQueryOptions(supabase, roomId));
         },
       )
@@ -37,7 +37,7 @@ export function useRealtime(roomId: string) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
         (payload: any) => {
-          console.log('[v0] Vote inserted:', payload);
+          console.log('Vote inserted:', payload);
           queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
         },
       )
@@ -45,7 +45,7 @@ export function useRealtime(roomId: string) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
         (payload: any) => {
-          console.log('[v0] Vote updated:', payload);
+          console.log('Vote updated:', payload);
           queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
         },
       )
@@ -53,7 +53,7 @@ export function useRealtime(roomId: string) {
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
         (payload: any) => {
-          console.log('[v0] Vote deleted:', payload);
+          console.log('Vote deleted:', payload);
           queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
         },
       )
