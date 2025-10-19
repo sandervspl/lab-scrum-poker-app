@@ -1,15 +1,11 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  participantsQueryOptions,
-  roomQueryOptions,
-  votesQueryOptions,
-} from '@/lib/queries/room-queries';
+import { participantsQueryOptions, votesQueryOptions } from '@/lib/queries/room-queries';
 import { allVotesMatch, randomInRange } from '@/lib/room-utils';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
-import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import confetti from 'canvas-confetti';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 
@@ -21,7 +17,6 @@ type Props = {
 
 export function ViewVotesButton({ room }: Props) {
   const supabase = getSupabaseBrowserClient();
-  const queryClient = useQueryClient();
   const { hasCelebrated, setHasCelebrated } = useRoomContext();
   const { data: votes } = useSuspenseQuery(votesQueryOptions(supabase, room.id));
   const { data: participants } = useSuspenseQuery(participantsQueryOptions(supabase, room.id));
@@ -56,8 +51,6 @@ export function ViewVotesButton({ room }: Props) {
       console.error('[v0] Error toggling votes visibility:', error);
       return;
     }
-
-    queryClient.invalidateQueries(roomQueryOptions(supabase, room.id));
 
     if (
       newValue &&

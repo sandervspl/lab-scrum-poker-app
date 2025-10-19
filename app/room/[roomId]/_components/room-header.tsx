@@ -7,30 +7,28 @@ import { Input } from '@/components/ui/input';
 import { updateRoomNameInHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
-import { useQueryClient } from '@tanstack/react-query';
 import { Check, Copy, Pencil } from 'lucide-react';
 
-interface RoomHeaderProps {
+type Props = {
   room: Database['public']['Tables']['rooms']['Row'] | null;
   roomId: string;
   isAdmin: boolean;
-}
+};
 
-export function RoomHeader({ room, roomId, isAdmin }: RoomHeaderProps) {
+export function RoomHeader({ room, roomId, isAdmin }: Props) {
   const [copied, setCopied] = useState(false);
   const [isEditingRoomName, setIsEditingRoomName] = useState(false);
   const [editedRoomName, setEditedRoomName] = useState('');
   const supabase = getSupabaseBrowserClient();
-  const queryClient = useQueryClient();
 
-  const copyRoomLink = () => {
+  function copyRoomLink() {
     const url = window.location.origin + `/room/${roomId}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
+  }
 
-  const updateRoomName = async () => {
+  async function updateRoomName() {
     if (!editedRoomName.trim() || editedRoomName === room?.room_name) {
       setIsEditingRoomName(false);
       return;
@@ -48,17 +46,15 @@ export function RoomHeader({ room, roomId, isAdmin }: RoomHeaderProps) {
       alert('Failed to update room name');
     } else if (data) {
       updateRoomNameInHistory(roomId, editedRoomName.trim());
-      // @TODO: How to invalidate cache-helper queries?
-      queryClient.invalidateQueries({ queryKey: ['room', roomId] });
     }
 
     setIsEditingRoomName(false);
-  };
+  }
 
-  const startEditingRoomName = () => {
+  function startEditingRoomName() {
     setEditedRoomName(room?.room_name || `Room ${roomId.slice(0, 8)}`);
     setIsEditingRoomName(true);
-  };
+  }
 
   return (
     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">

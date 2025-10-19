@@ -20,7 +20,7 @@ export function VotingCards({ participantId }: { participantId: string }) {
   >(votes.data?.find((v) => v.participant_id === participantId)?.vote_value ?? null);
 
   console.log(
-    '[v0] Optimistic vote:',
+    'Optimistic vote:',
     votes.data,
     participantId,
     optimisticVote,
@@ -29,17 +29,16 @@ export function VotingCards({ participantId }: { participantId: string }) {
 
   async function castVote(value: string) {
     if (!participantId) {
-      console.log('[v0] Cannot cast vote: no participant ID');
+      console.log('Cannot cast vote: no participant ID');
       return;
     }
 
-    console.log('[v0] Casting vote:', { roomId, participantId, value });
+    console.log('Casting vote:', { roomId, participantId, value });
 
     startTransition(async () => {
       setOptimisticVote(value);
-
-      console.log('[v0] Updating existing vote');
-      const { error } = await supabase.from('votes').upsert(
+      console.log('Updating existing vote');
+      await supabase.from('votes').upsert(
         { vote_value: value, participant_id: participantId, room_id: roomId },
         {
           onConflict: 'room_id, participant_id',

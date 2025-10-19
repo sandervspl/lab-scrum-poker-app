@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import {
   AlertDialog,
@@ -15,16 +15,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { resetVotesOfRoom } from '@/lib/queries/room-db';
-import { roomQueryOptions, votesQueryOptions } from '@/lib/queries/room-queries';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { useRoomContext } from './context';
 
 export function ResetVotesButton() {
   const { roomId } = useParams<{ roomId: string }>();
   const [showResetDialog, setShowResetDialog] = useState(false);
-  const queryClient = useQueryClient();
   const { setHasCelebrated } = useRoomContext();
 
   async function resetVotes() {
@@ -37,11 +34,6 @@ export function ResetVotesButton() {
     }
 
     setHasCelebrated(false);
-
-    await Promise.all([
-      queryClient.invalidateQueries(votesQueryOptions(supabase, roomId)),
-      queryClient.invalidateQueries(roomQueryOptions(supabase, roomId)),
-    ]);
   }
 
   return (
