@@ -16,10 +16,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { resetVotesOfRoom } from '@/lib/queries/room-db';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { RotateCcwIcon } from 'lucide-react';
 
 import { useRoomContext } from './context';
 
-export function ResetVotesButton() {
+type Props = {
+  className?: string;
+};
+
+export function ResetVotesButton({ className }: Props) {
   const { roomId } = useParams<{ roomId: string }>();
   const [showResetDialog, setShowResetDialog] = useState(false);
   const { setHasCelebrated } = useRoomContext();
@@ -39,7 +44,8 @@ export function ResetVotesButton() {
   return (
     <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className={className}>
+          <RotateCcwIcon className="size-4" />
           Reset Votes
         </Button>
       </AlertDialogTrigger>

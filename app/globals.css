@@ -188,3 +188,8 @@
     letter-spacing: var(--tracking-normal);
   }
 }
+
+/* Presentation Mode: hide global header */
+body.presentation-mode-room header {
+  display: none !important;
+}

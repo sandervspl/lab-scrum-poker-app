@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { sortParticipantsByVote } from '@/lib/room-utils';
+import { calculateAverage, sortParticipantsByVote } from '@/lib/room-utils';
 import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
 import { Users } from 'lucide-react';
@@ -16,28 +16,54 @@ type Props = {
   room: Database['public']['Tables']['rooms']['Row'];
   userId: string | null;
   isAdmin: boolean;
+  presentationMode?: boolean;
 };
 
-export function ParticipantsList({ participants, votes, room, userId, isAdmin }: Props) {
+export function ParticipantsList({
+  participants,
+  votes,
+  room,
+  userId,
+  isAdmin,
+  presentationMode,
+}: Props) {
   const sortedParticipants = sortParticipantsByVote(
     participants,
     votes,
     room?.votes_revealed ?? false,
   );
+  const averageVote = votes ? calculateAverage(votes) : null;
 
   return (
     <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Users className="h-5 w-5" />
-          <span className="hidden sm:block">Participants</span> ({participants.length})
-        </CardTitle>
-        <AdminControls room={room} />
-      </CardHeader>
+      {presentationMode ? (
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Users className="h-5 w-5" />
+            <span className="hidden sm:block">Participants</span> ({participants.length})
+          </CardTitle>
+          {room?.votes_revealed && averageVote && (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">Average:</span>
+              <Badge variant="default" className="px-3 py-0 text-lg font-bold">
+                {averageVote}
+              </Badge>
+            </div>
+          )}
+        </CardHeader>
+      ) : (
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Users className="h-5 w-5" />
+            <span className="hidden sm:block">Participants</span> ({participants.length})
+          </CardTitle>
+          <AdminControls room={room} />
+        </CardHeader>
+      )}
       <CardContent>
         <div className="space-y-3">
           {sortedParticipants.map((participant) => (
-            <ParticipantCard
+            <ParticipantRow
               key={participant.id}
               participant={participant}
               votes={votes}
@@ -52,7 +78,7 @@ export function ParticipantsList({ participants, votes, room, userId, isAdmin }:
   );
 }
 
-function ParticipantCard({
+function ParticipantRow({
   participant,
   votes,
   room,
@@ -92,7 +118,7 @@ function ParticipantCard({
         {room?.votes_revealed && hasVoted ? (
           <Badge
             variant="secondary"
-            className="aspect-[3/4] rounded-md px-3 py-1 text-base font-semibold"
+            className="aspect-[3/4] rounded-md px-2 py-1 text-base font-semibold"
           >
             {vote.vote_value}
           </Badge>
