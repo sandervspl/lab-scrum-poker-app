@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Users } from 'lucide-react';
 
 import { AdminControls } from './admin-controls';
+import { ParticipantName } from './participant-name';
 import { RemoveParticipantButton } from './remove-participant-button';
 
 type Props = {
@@ -107,14 +108,19 @@ function ParticipantRow({
         >
           {participant.name.charAt(0).toUpperCase()}
         </div>
-        <div>
-          <p className="font-medium">{participant.name}</p>
-          {participant.participant_id === userId && (
-            <p className="text-muted-foreground text-xs">You</p>
-          )}
+        <div className="flex items-center gap-2">
+          <ParticipantName
+            participantId={participant.participant_id}
+            currentName={participant.name}
+            roomId={room.id}
+            userId={userId}
+          />
         </div>
       </div>
       <div className="flex items-center gap-2">
+        {isAdmin && participant.participant_id !== userId && (
+          <RemoveParticipantButton participantId={participant.participant_id} />
+        )}
         {room?.votes_revealed && hasVoted ? (
           <Badge
             variant="secondary"
@@ -126,9 +132,6 @@ function ParticipantRow({
           <Badge variant="secondary">Voted</Badge>
         ) : (
           <Badge variant="outline">Waiting</Badge>
-        )}
-        {isAdmin && participant.participant_id !== userId && (
-          <RemoveParticipantButton participantId={participant.participant_id} />
         )}
       </div>
     </div>
