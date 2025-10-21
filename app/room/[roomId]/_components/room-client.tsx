@@ -74,14 +74,7 @@ export function RoomClient({ roomId, participantId }: Props) {
 
   // Show name form if first time joining room
   if (!participants.data.some((p) => p.participant_id === participantId)) {
-    return (
-      <JoinRoomForm
-        roomId={roomId}
-        room={room.data}
-        isAdmin={isAdmin}
-        currentParticipantId={participantId!}
-      />
-    );
+    return <JoinRoomForm roomId={roomId} room={room.data} isAdmin={isAdmin} />;
   }
 
   if (isPresentationMode) {

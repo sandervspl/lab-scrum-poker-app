@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -11,6 +12,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { PARTICIPANT_COOKIE } from '@/lib/cookies';
 import {
   participantsQueryOptions,
   roomQueryOptions,
@@ -21,6 +23,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
+import Cookies from 'js-cookie';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -34,12 +37,13 @@ type Props = {
   roomId: string;
   room: Database['public']['Tables']['rooms']['Row'] | null;
   isAdmin: boolean;
-  currentParticipantId: string | null;
 };
 
-export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Props) {
+export function JoinRoomForm({ roomId, room, isAdmin }: Props) {
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const participantId = Cookies.get(PARTICIPANT_COOKIE)!;
 
   const form = useForm<JoinRoomFormValues>({
     resolver: zodResolver(joinRoomSchema),
@@ -49,8 +53,6 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Pr
   });
 
   async function onSubmit(values: JoinRoomFormValues) {
-    const participantId = currentParticipantId || crypto.randomUUID();
-
     // Check if participant already exists in this room
     const { data: existingParticipant } = await supabase
       .from('participants')
@@ -59,8 +61,8 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Pr
       .eq('participant_id', participantId)
       .single();
 
-    if (existingParticipant && !currentParticipantId) {
-      form.setError('name', { message: 'You are already in this room' });
+    if (existingParticipant) {
+      form.setError('name', { message: 'You are already in this room. Please refresh the page.' });
       return;
     }
 
@@ -88,9 +90,13 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Pr
     addRoomToHistory(roomId, isAdmin, participantId, values.name, room?.room_name || undefined);
 
     // Refetch all room queries
-    queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
-    queryClient.invalidateQueries(participantsQueryOptions(supabase, roomId));
-    queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
+    await Promise.all([
+      queryClient.invalidateQueries(roomQueryOptions(supabase, roomId)),
+      queryClient.invalidateQueries(participantsQueryOptions(supabase, roomId)),
+      queryClient.invalidateQueries(votesQueryOptions(supabase, roomId)),
+    ]);
+
+    router.refresh();
   }
 
   return (
