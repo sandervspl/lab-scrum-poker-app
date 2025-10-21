@@ -25,7 +25,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 const joinRoomSchema = z.object({
-  name: z.string().min(1, 'Name is required').trim(),
+  name: z.string().min(1, 'Name is required').max(20, 'Name must be 20 characters or less').trim(),
 });
 
 type JoinRoomFormValues = z.infer<typeof joinRoomSchema>;
@@ -51,6 +51,19 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Pr
   async function onSubmit(values: JoinRoomFormValues) {
     const participantId = currentParticipantId || crypto.randomUUID();
 
+    // Check if participant already exists in this room
+    const { data: existingParticipant } = await supabase
+      .from('participants')
+      .select('id')
+      .eq('room_id', roomId)
+      .eq('participant_id', participantId)
+      .single();
+
+    if (existingParticipant && !currentParticipantId) {
+      form.setError('name', { message: 'You are already in this room' });
+      return;
+    }
+
     const { error } = await supabase.from('participants').upsert(
       {
         room_id: roomId,
@@ -64,7 +77,11 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Pr
 
     if (error) {
       console.error('[v0] Error joining room:', error);
-      alert('Failed to join room');
+      if (error.message.includes('participants_name_length_check')) {
+        form.setError('name', { message: 'Name must be 20 characters or less' });
+      } else {
+        form.setError('name', { message: 'Failed to join room' });
+      }
       return;
     }
 
