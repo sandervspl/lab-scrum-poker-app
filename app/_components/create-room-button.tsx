@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { PARTICIPANT_COOKIE } from '@/lib/cookies';
+import { getParticipantCookie, PARTICIPANT_COOKIE } from '@/lib/cookies';
 import { addRoomToHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useMutation } from '@tanstack/react-query';
@@ -16,7 +16,7 @@ export function CreateRoomButton() {
   const createRoom = useMutation({
     mutationFn: async () => {
       const supabase = getSupabaseBrowserClient();
-      const participantId = Cookies.get(PARTICIPANT_COOKIE)!;
+      const participantId = getParticipantCookie()!;
 
       const words = await fetch('https://random-word-api.herokuapp.com/word?number=3').then(
         (res) => res.json() as Promise<string[]>,
@@ -44,7 +44,7 @@ export function CreateRoomButton() {
   function handleCreateRoom() {
     createRoom.mutateAsync().then((room) => {
       if (room) {
-        const participantId = Cookies.get(PARTICIPANT_COOKIE)!;
+        const participantId = getParticipantCookie()!;
         addRoomToHistory(room.id, true, participantId);
         router.push(`/room/${room.id}`);
       }

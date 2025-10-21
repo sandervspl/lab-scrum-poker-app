@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRealtime } from '@/app/room/[roomId]/use-realtime';
 import { Button } from '@/components/ui/button';
-import { PARTICIPANT_COOKIE } from '@/lib/cookies';
+import { generateParticipantCookie, getParticipantCookie } from '@/lib/cookies';
 import {
   participantsQueryOptions,
   roomQueryOptions,
@@ -50,10 +50,8 @@ export function RoomClient({ roomId, participantId }: Props) {
   }
 
   // Race condition: middleware might not have set the participant ID cookie yet
-  if (!participantId && Cookies.get(PARTICIPANT_COOKIE) == null) {
-    Cookies.set(PARTICIPANT_COOKIE, crypto.randomUUID(), {
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 10), // 10 years
-    });
+  if (!participantId && getParticipantCookie() == null) {
+    generateParticipantCookie();
     router.refresh();
     return null;
   }

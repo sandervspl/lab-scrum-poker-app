@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-import { PARTICIPANT_COOKIE, ROOMS_COOKIE } from './cookies';
+import { getParticipantCookie, PARTICIPANT_COOKIE, ROOMS_COOKIE } from './cookies';
 
 export interface RoomHistoryItem {
   roomId: string;
@@ -14,7 +14,7 @@ export interface RoomHistoryItem {
 export function getRoomHistory(cookie?: string, _participantId?: string): RoomHistoryItem[] {
   try {
     const stored = cookie ?? Cookies.get(ROOMS_COOKIE);
-    const participantId = _participantId ?? Cookies.get(PARTICIPANT_COOKIE)!;
+    const participantId = _participantId ?? getParticipantCookie()!;
     if (!stored || !participantId) return [];
 
     const rooms = JSON.parse(stored) as RoomHistoryItem[];

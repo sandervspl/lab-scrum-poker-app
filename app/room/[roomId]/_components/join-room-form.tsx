@@ -12,7 +12,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { PARTICIPANT_COOKIE } from '@/lib/cookies';
+import { getParticipantCookie, PARTICIPANT_COOKIE } from '@/lib/cookies';
 import {
   participantsQueryOptions,
   roomQueryOptions,
@@ -43,7 +43,7 @@ export function JoinRoomForm({ roomId, room, isAdmin }: Props) {
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const participantId = Cookies.get(PARTICIPANT_COOKIE)!;
+  const participantId = getParticipantCookie()!;
 
   const form = useForm<JoinRoomFormValues>({
     resolver: zodResolver(joinRoomSchema),
