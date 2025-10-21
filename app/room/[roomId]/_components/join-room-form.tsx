@@ -11,6 +11,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  participantsQueryOptions,
+  roomQueryOptions,
+  votesQueryOptions,
+} from '@/lib/queries/room-queries';
 import { addRoomToHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
@@ -66,7 +71,9 @@ export function JoinRoomForm({ roomId, room, isAdmin, currentParticipantId }: Pr
     addRoomToHistory(roomId, isAdmin, participantId, values.name, room?.room_name || undefined);
 
     // Refetch all room queries
-    queryClient.invalidateQueries({ queryKey: ['room'] });
+    queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
+    queryClient.invalidateQueries(participantsQueryOptions(supabase, roomId));
+    queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
   }
 
   return (
