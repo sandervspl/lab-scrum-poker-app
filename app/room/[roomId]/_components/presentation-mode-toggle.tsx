@@ -26,16 +26,19 @@ export function PresentationModeToggle({ className }: Props) {
   }
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      <Label htmlFor="presentation-mode" className="text-sm">
+    <Label
+      htmlFor="presentation-mode"
+      className={cn('flex cursor-pointer items-center gap-2 text-sm *:cursor-pointer', className)}
+    >
+      <div className="flex items-center gap-2">
         <PresentationIcon className="size-4" />
         Presentation mode
-      </Label>
+      </div>
       <Switch
         id="presentation-mode"
         checked={isPresentationMode}
         onCheckedChange={() => togglePresentationMode()}
       />
-    </div>
+    </Label>
   );
 }
