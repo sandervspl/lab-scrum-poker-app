@@ -1,6 +1,8 @@
+import { RequestCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import Cookies from 'js-cookie';
 
+import { getDateInYears } from './date';
 import { RoomHistoryItem } from './room-history';
 
 export const ROOMS_COOKIE = 'rooms';
@@ -9,16 +11,26 @@ export const PARTICIPANT_COOKIE = 'participant_id';
 type CookieReturnValue<T extends ReadonlyRequestCookies | typeof Cookies> =
   T extends ReadonlyRequestCookies ? ReturnType<T['get']> : string;
 
-export function generateParticipantCookie() {
-  const exists = Cookies.get(PARTICIPANT_COOKIE);
-  if (exists) {
-    return exists;
+function isNextCookie(cookie: RequestCookie | string | undefined): cookie is RequestCookie {
+  return typeof cookie === 'function';
+}
+
+export function generateParticipantCookie(cookieStore: ReadonlyRequestCookies | typeof Cookies) {
+  const participantCookie = getParticipantCookie(cookieStore);
+  if (participantCookie) {
+    return isNextCookie(participantCookie) ? participantCookie.value : participantCookie;
   }
+
   const id = crypto.randomUUID();
-  Cookies.set(PARTICIPANT_COOKIE, id, {
-    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 10), // 10 years
-  });
+  setParticipantCookie(cookieStore, id);
+
   return id;
+}
+
+function setParticipantCookie(cookieStore: ReadonlyRequestCookies | typeof Cookies, id: string) {
+  cookieStore.set(PARTICIPANT_COOKIE, id, {
+    expires: getDateInYears(10),
+  });
 }
 
 export function getParticipantCookie<T extends ReadonlyRequestCookies | typeof Cookies>(
@@ -35,6 +47,6 @@ export function getRoomsCookie<T extends ReadonlyRequestCookies | typeof Cookies
 
 export function setRoomsCookie(rooms: RoomHistoryItem[]) {
   Cookies.set(ROOMS_COOKIE, JSON.stringify(rooms), {
-    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 10), // 10 years
+    expires: getDateInYears(10),
   });
 }

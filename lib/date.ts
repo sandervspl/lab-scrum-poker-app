@@ -18,3 +18,7 @@ export function getRelativeLastJoinedDate(lastJoined: number) {
     return rtf.format(-days, 'day');
   }
 }
+
+export function getDateInYears(years: number) {
+  return new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * years);
+}
