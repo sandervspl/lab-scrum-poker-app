@@ -31,7 +31,7 @@ export function AdminControls({ room }: Props) {
       )}
 
       <ResetVotesButton />
-      <ViewVotesButton room={room} />
+      <ViewVotesButton />
     </div>
   );
 }
