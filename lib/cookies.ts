@@ -5,8 +5,8 @@ import Cookies from 'js-cookie';
 import { getDateInYears } from './date';
 import { RoomHistoryItem } from './room-history';
 
-export const ROOMS_COOKIE = 'rooms';
-export const PARTICIPANT_COOKIE = 'participant_id';
+const ROOMS_COOKIE = 'rooms';
+const PARTICIPANT_COOKIE = 'participant_id';
 
 type CookieReturnValue<T extends ReadonlyRequestCookies | typeof Cookies> =
   T extends ReadonlyRequestCookies ? ReturnType<T['get']> : string;

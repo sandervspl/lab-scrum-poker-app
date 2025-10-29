@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-import { getParticipantCookie, getRoomsCookie, ROOMS_COOKIE, setRoomsCookie } from './cookies';
+import { getParticipantCookie, getRoomsCookie, setRoomsCookie } from './cookies';
 
 export interface RoomHistoryItem {
   roomId: string;

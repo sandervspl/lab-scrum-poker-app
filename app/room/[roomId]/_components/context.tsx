@@ -3,7 +3,7 @@
 import type React from 'react';
 import { createContext, useContext, useState } from 'react';
 
-export type RoomContextType = {
+type RoomContextType = {
   hasCelebrated: boolean;
   setHasCelebrated: React.Dispatch<React.SetStateAction<boolean>>;
 };

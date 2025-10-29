@@ -24,7 +24,7 @@ export function votesQueryOptions(supabase: TypedSupabaseClient, roomId: string)
   } satisfies QueryOptions;
 }
 
-export function participantQueryOptions(
+function participantQueryOptions(
   supabase: TypedSupabaseClient,
   roomId: string,
   participantId: string | null,
