@@ -1,6 +1,6 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Home } from 'lucide-react';
 
 export function Header() {
   return (
@@ -10,8 +10,14 @@ export function Header() {
           href="/"
           className="hover:text-primary flex items-center gap-2 text-lg font-semibold transition-colors"
         >
-          🃏
-          <span>Scrum Poker</span>
+          <Image
+            src="https://www.labdigital.nl/images/logo.svg"
+            fetchPriority="high"
+            alt="Lab Digital"
+            width="103"
+            height="24"
+            className="h-6"
+          />
         </Link>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
