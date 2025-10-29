@@ -52,7 +52,7 @@ export function CreateRoomButton() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col items-center justify-center">
       <Button
         onClick={handleCreateRoom}
         disabled={isLoading}
