@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-import { getParticipantCookie, PARTICIPANT_COOKIE, ROOMS_COOKIE } from './cookies';
+import { getParticipantCookie, ROOMS_COOKIE, setRoomsCookie } from './cookies';
 
 export interface RoomHistoryItem {
   roomId: string;
@@ -57,9 +57,8 @@ export function addRoomToHistory(
     filtered.unshift(newEntry);
 
     // Keep only the last 10 rooms
-    const limited = filtered.slice(0, 10);
-
-    Cookies.set(ROOMS_COOKIE, JSON.stringify(limited));
+    const rooms = filtered.slice(0, 10);
+    setRoomsCookie(rooms);
   } catch (error) {
     console.error('Error saving room history:', error);
   }
@@ -68,8 +67,8 @@ export function addRoomToHistory(
 export function removeRoomFromHistory(roomId: string) {
   try {
     const history = getRoomHistory();
-    const filtered = history.filter((room) => room.roomId !== roomId);
-    Cookies.set(ROOMS_COOKIE, JSON.stringify(filtered));
+    const rooms = history.filter((room) => room.roomId !== roomId);
+    setRoomsCookie(rooms);
   } catch (error) {
     console.error('Error removing room from history:', error);
   }
@@ -77,12 +76,12 @@ export function removeRoomFromHistory(roomId: string) {
 
 export function updateRoomNameInHistory(roomId: string, roomName: string) {
   try {
-    const history = getRoomHistory();
-    const room = history.find((r) => r.roomId === roomId);
+    const roomHistory = getRoomHistory();
+    const room = roomHistory.find((r) => r.roomId === roomId);
 
     if (room) {
       room.roomName = roomName;
-      Cookies.set(ROOMS_COOKIE, JSON.stringify(history));
+      setRoomsCookie(roomHistory);
     }
   } catch (error) {
     console.error('Error updating room name in history:', error);
