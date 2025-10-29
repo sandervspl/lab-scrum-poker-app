@@ -1,11 +1,12 @@
+import { Suspense } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { CreateRoomButton } from './_components/create-room-button';
-import { Rooms } from './_components/rooms';
+import { Rooms, RoomsSkeleton } from './_components/rooms';
 
 export default function HomePage() {
   return (
-    <main className="from-background via-background to-muted/20 mt-8 flex min-h-[calc(100vh-3.5rem)] justify-center bg-gradient-to-br p-4 shadow-none">
+    <main className="from-background via-background to-muted/20 mt-8 flex min-h-[calc(100vh-3.5rem)] justify-center bg-linear-to-br p-4 shadow-none">
       <div className="w-full max-w-2xl space-y-6">
         <Card className="border-none bg-transparent shadow-none">
           <CardHeader className="text-center">
@@ -19,8 +20,9 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        {/* @ts-ignore */}
-        <Rooms />
+        <Suspense fallback={<RoomsSkeleton />}>
+          <Rooms />
+        </Suspense>
       </div>
     </main>
   );

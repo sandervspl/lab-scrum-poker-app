@@ -5,7 +5,6 @@ import { getParticipantCookie } from '@/lib/cookies';
 import { roomQueryOptions } from '@/lib/queries/room-queries';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
-import Cookies from 'js-cookie';
 import { Loader2Icon } from 'lucide-react';
 
 import { RoomProvider } from './_components/context';

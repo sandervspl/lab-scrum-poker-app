@@ -14,7 +14,7 @@ export function RoomCard({ room }: { room: RoomHistoryItem }) {
       className="bg-card hover:border-primary group flex w-full items-center justify-between rounded-lg border p-4 text-left transition-all"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="bg-primary/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
+        <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
           {room.isAdmin ? (
             <CrownIcon className="text-primary h-5 w-5" />
           ) : (
@@ -30,7 +30,7 @@ export function RoomCard({ room }: { room: RoomHistoryItem }) {
           </p>
         </div>
       </div>
-      <div className="flex flex-shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {room.isAdmin && (
           <Badge variant="secondary" className="text-xs">
             Admin
@@ -40,4 +40,8 @@ export function RoomCard({ room }: { room: RoomHistoryItem }) {
       </div>
     </Link>
   );
+}
+
+export function RoomCardSkeleton() {
+  return <div className="bg-muted h-[74px] animate-pulse rounded-lg" />;
 }
