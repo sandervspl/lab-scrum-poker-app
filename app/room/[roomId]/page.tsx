@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { cookies } from 'next/headers';
 import { RoomClient } from '@/app/room/[roomId]/_components/room-client';
-import { getParticipantCookie, PARTICIPANT_COOKIE } from '@/lib/cookies';
+import { getParticipantCookie } from '@/lib/cookies';
 import { roomQueryOptions } from '@/lib/queries/room-queries';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';

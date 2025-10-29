@@ -6,6 +6,9 @@ import { RoomHistoryItem } from './room-history';
 export const ROOMS_COOKIE = 'rooms';
 export const PARTICIPANT_COOKIE = 'participant_id';
 
+type CookieReturnValue<T extends ReadonlyRequestCookies | typeof Cookies> =
+  T extends ReadonlyRequestCookies ? ReturnType<T['get']> : string;
+
 export function generateParticipantCookie() {
   const exists = Cookies.get(PARTICIPANT_COOKIE);
   if (exists) {
@@ -20,8 +23,14 @@ export function generateParticipantCookie() {
 
 export function getParticipantCookie<T extends ReadonlyRequestCookies | typeof Cookies>(
   cookieStore: T,
-): T extends ReadonlyRequestCookies ? ReturnType<T['get']> : string {
+): CookieReturnValue<T> {
   return cookieStore.get(PARTICIPANT_COOKIE) as any;
+}
+
+export function getRoomsCookie<T extends ReadonlyRequestCookies | typeof Cookies>(
+  cookieStore: T,
+): CookieReturnValue<T> {
+  return cookieStore.get(ROOMS_COOKIE) as any;
 }
 
 export function setRoomsCookie(rooms: RoomHistoryItem[]) {

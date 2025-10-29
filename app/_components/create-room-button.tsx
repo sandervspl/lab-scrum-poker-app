@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { getParticipantCookie, PARTICIPANT_COOKIE } from '@/lib/cookies';
+import { getParticipantCookie } from '@/lib/cookies';
 import { addRoomToHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useMutation } from '@tanstack/react-query';

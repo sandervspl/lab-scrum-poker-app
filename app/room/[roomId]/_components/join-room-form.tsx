@@ -12,7 +12,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { getParticipantCookie, PARTICIPANT_COOKIE } from '@/lib/cookies';
+import { getParticipantCookie } from '@/lib/cookies';
 import {
   participantsQueryOptions,
   roomQueryOptions,

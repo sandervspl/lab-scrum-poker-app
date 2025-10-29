@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-import { getParticipantCookie, ROOMS_COOKIE, setRoomsCookie } from './cookies';
+import { getParticipantCookie, getRoomsCookie, ROOMS_COOKIE, setRoomsCookie } from './cookies';
 
 export interface RoomHistoryItem {
   roomId: string;
@@ -11,13 +11,16 @@ export interface RoomHistoryItem {
   roomName?: string;
 }
 
-export function getRoomHistory(cookie?: string, _participantId?: string): RoomHistoryItem[] {
+export function getRoomHistory(
+  roomsHistoryCookie: string | undefined,
+  participantId: string | undefined,
+): RoomHistoryItem[] {
   try {
-    const stored = cookie ?? Cookies.get(ROOMS_COOKIE);
-    const participantId = _participantId ?? getParticipantCookie(Cookies)!;
-    if (!stored || !participantId) return [];
+    if (!roomsHistoryCookie || !participantId) {
+      return [];
+    }
 
-    const rooms = JSON.parse(stored) as RoomHistoryItem[];
+    const rooms = JSON.parse(roomsHistoryCookie) as RoomHistoryItem[];
     return (
       rooms
         // Only show rooms for the current participant id (cookie could've expired or removed)
@@ -39,7 +42,8 @@ export function addRoomToHistory(
   roomName?: string,
 ) {
   try {
-    const history = getRoomHistory();
+    const roomsHistoryCookie = getRoomsCookie(Cookies);
+    const history = getRoomHistory(roomsHistoryCookie, participantId);
 
     // Remove existing entry for this room if it exists
     const filtered = history.filter((room) => room.roomId !== roomId);
@@ -66,7 +70,7 @@ export function addRoomToHistory(
 
 export function removeRoomFromHistory(roomId: string) {
   try {
-    const history = getRoomHistory();
+    const history = getRoomHistory(getRoomsCookie(Cookies), getParticipantCookie(Cookies));
     const rooms = history.filter((room) => room.roomId !== roomId);
     setRoomsCookie(rooms);
   } catch (error) {
@@ -76,7 +80,7 @@ export function removeRoomFromHistory(roomId: string) {
 
 export function updateRoomNameInHistory(roomId: string, roomName: string) {
   try {
-    const roomHistory = getRoomHistory();
+    const roomHistory = getRoomHistory(getRoomsCookie(Cookies), getParticipantCookie(Cookies));
     const room = roomHistory.find((r) => r.roomId === roomId);
 
     if (room) {

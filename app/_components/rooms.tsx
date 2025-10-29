@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { cookies } from 'next/headers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PARTICIPANT_COOKIE, ROOMS_COOKIE } from '@/lib/cookies';
+import { getParticipantCookie, getRoomsCookie } from '@/lib/cookies';
 import { getRoomHistory } from '@/lib/room-history';
 import { ClockIcon, Users } from 'lucide-react';
 
@@ -10,8 +10,8 @@ import { RoomCard } from './room-card';
 export async function Rooms(): Promise<ReactNode> {
   const cookieStore = await cookies();
   const rooms = getRoomHistory(
-    cookieStore.get(ROOMS_COOKIE)?.value,
-    cookieStore.get(PARTICIPANT_COOKIE)?.value,
+    getRoomsCookie(cookieStore)?.value,
+    getParticipantCookie(cookieStore)?.value,
   );
 
   return (
