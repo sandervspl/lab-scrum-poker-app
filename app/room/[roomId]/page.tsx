@@ -5,6 +5,7 @@ import { getParticipantCookie, PARTICIPANT_COOKIE } from '@/lib/cookies';
 import { roomQueryOptions } from '@/lib/queries/room-queries';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
+import Cookies from 'js-cookie';
 import { Loader2Icon } from 'lucide-react';
 
 import { RoomProvider } from './_components/context';
@@ -17,7 +18,7 @@ export default async function RoomPage({ params }: Props) {
   const { roomId } = await params;
   const cookieStore = await cookies();
   const supabase = getSupabaseServerClient(cookieStore);
-  const participantId = getParticipantCookie();
+  const participantId = getParticipantCookie(cookieStore);
   const queryClient = new QueryClient();
 
   const { data: room, error: roomError } = await queryClient.ensureQueryData(
@@ -42,7 +43,7 @@ export default async function RoomPage({ params }: Props) {
         }
       >
         <RoomProvider>
-          <RoomClient roomId={roomId} participantId={participantId} />
+          <RoomClient roomId={roomId} participantId={participantId?.value} />
         </RoomProvider>
       </Suspense>
     </HydrationBoundary>

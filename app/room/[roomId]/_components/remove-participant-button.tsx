@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { getParticipantCookie } from '@/lib/cookies';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useMutation } from '@tanstack/react-query';
+import Cookies from 'js-cookie';
 import { Loader2Icon, Trash2Icon } from 'lucide-react';
 
 export function RemoveParticipantButton({ participantId }: { participantId: string }) {
   const { roomId } = useParams<{ roomId: string }>();
   const supabase = getSupabaseBrowserClient();
-  const userId = getParticipantCookie()!;
+  const userId = getParticipantCookie(Cookies)!;
 
   const removeParticipant = useMutation({
     mutationFn: async (participantIdToRemove: string) => {

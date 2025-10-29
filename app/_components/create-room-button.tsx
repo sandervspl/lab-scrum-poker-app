@@ -16,7 +16,7 @@ export function CreateRoomButton() {
   const createRoom = useMutation({
     mutationFn: async () => {
       const supabase = getSupabaseBrowserClient();
-      const participantId = getParticipantCookie()!;
+      const participantId = getParticipantCookie(Cookies)!;
 
       const words = await fetch('https://random-word-api.herokuapp.com/word?number=3').then(
         (res) => res.json() as Promise<string[]>,
@@ -44,7 +44,7 @@ export function CreateRoomButton() {
   function handleCreateRoom() {
     createRoom.mutateAsync().then((room) => {
       if (room) {
-        const participantId = getParticipantCookie()!;
+        const participantId = getParticipantCookie(Cookies)!;
         addRoomToHistory(room.id, true, participantId);
         router.push(`/room/${room.id}`);
       }

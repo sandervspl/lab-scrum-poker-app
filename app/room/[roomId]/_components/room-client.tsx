@@ -50,7 +50,7 @@ export function RoomClient({ roomId, participantId }: Props) {
   }
 
   // Race condition: middleware might not have set the participant ID cookie yet
-  if (!participantId && getParticipantCookie() == null) {
+  if (!participantId && getParticipantCookie(Cookies) == null) {
     generateParticipantCookie();
     router.refresh();
     return null;

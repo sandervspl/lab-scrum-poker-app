@@ -14,7 +14,7 @@ export interface RoomHistoryItem {
 export function getRoomHistory(cookie?: string, _participantId?: string): RoomHistoryItem[] {
   try {
     const stored = cookie ?? Cookies.get(ROOMS_COOKIE);
-    const participantId = _participantId ?? getParticipantCookie()!;
+    const participantId = _participantId ?? getParticipantCookie(Cookies)!;
     if (!stored || !participantId) return [];
 
     const rooms = JSON.parse(stored) as RoomHistoryItem[];

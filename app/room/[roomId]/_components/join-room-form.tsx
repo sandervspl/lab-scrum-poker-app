@@ -43,7 +43,7 @@ export function JoinRoomForm({ roomId, room, isAdmin }: Props) {
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const participantId = getParticipantCookie()!;
+  const participantId = getParticipantCookie(Cookies)!;
 
   const form = useForm<JoinRoomFormValues>({
     resolver: zodResolver(joinRoomSchema),

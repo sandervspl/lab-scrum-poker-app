@@ -1,3 +1,4 @@
+import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import Cookies from 'js-cookie';
 
 import { RoomHistoryItem } from './room-history';
@@ -17,8 +18,10 @@ export function generateParticipantCookie() {
   return id;
 }
 
-export function getParticipantCookie() {
-  return Cookies.get(PARTICIPANT_COOKIE);
+export function getParticipantCookie<T extends ReadonlyRequestCookies | typeof Cookies>(
+  cookieStore: T,
+): T extends ReadonlyRequestCookies ? ReturnType<T['get']> : string {
+  return cookieStore.get(PARTICIPANT_COOKIE) as any;
 }
 
 export function setRoomsCookie(rooms: RoomHistoryItem[]) {
