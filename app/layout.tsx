@@ -1,6 +1,6 @@
 import type React from 'react';
 import type { Metadata } from 'next';
-import { Red_Hat_Text } from 'next/font/google';
+import localFont from 'next/font/local';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Analytics } from '@vercel/analytics/next';
 
@@ -16,10 +16,30 @@ export const metadata: Metadata = {
   description: 'Estimate story points with your team in real-time',
 };
 
-const redHatText = Red_Hat_Text({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-red-hat-text',
+const ttCommonsExpanded = localFont({
+  src: [
+    {
+      path: './_fonts/tt-commons-expanded/regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: './_fonts/tt-commons-expanded/medium.ttf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: './_fonts/tt-commons-expanded/bold.ttf',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: './_fonts/tt-commons-expanded/italic.ttf',
+      weight: '400',
+      style: 'italic',
+    },
+  ],
+  variable: '--font-tt-commons-expanded',
 });
 
 export default function RootLayout({
@@ -34,7 +54,7 @@ export default function RootLayout({
           <script async crossOrigin="anonymous" src="https://tweakcn.com/live-preview.min.js" />
         )}
       </head>
-      <body className={`${redHatText.variable} font-sans`}>
+      <body className={`${ttCommonsExpanded.variable} font-sans`}>
         <QueryProvider>
           <ThemeProvider
             attribute="class"

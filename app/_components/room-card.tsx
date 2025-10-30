@@ -18,7 +18,7 @@ export function RoomCard({ room }: { room: RoomHistoryItem }) {
           {room.isAdmin ? (
             <CrownIcon className="text-primary h-5 w-5" />
           ) : (
-            <span className="text-primary text-sm font-semibold">
+            <span className="text-primary text-sm font-medium">
               {room.participantName?.charAt(0).toUpperCase() || '?'}
             </span>
           )}

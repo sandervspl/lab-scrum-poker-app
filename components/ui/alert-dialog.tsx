@@ -81,7 +81,7 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn('text-lg font-semibold', className)}
+      className={cn('text-lg font-medium', className)}
       {...props}
     />
   );
@@ -121,8 +121,6 @@ function AlertDialogCancel({
 
 export {
   AlertDialog,
-  
-  
   AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,

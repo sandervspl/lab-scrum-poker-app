@@ -115,7 +115,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-red-hat-text), sans-serif;
+  --font-sans: var(--font-tt-commons-expanded), sans-serif;
   --font-mono: monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);

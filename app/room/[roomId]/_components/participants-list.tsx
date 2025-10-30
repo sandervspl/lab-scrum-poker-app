@@ -100,7 +100,7 @@ function ParticipantRow({
       <div className="flex flex-1 items-center gap-3">
         <div
           className={cn(
-            'flex h-10 w-10 items-center justify-center rounded-full font-semibold',
+            'flex h-10 w-10 items-center justify-center rounded-full font-medium',
             hasVoted
               ? 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200'
               : 'bg-secondary',
@@ -124,7 +124,7 @@ function ParticipantRow({
         {room?.votes_revealed && hasVoted ? (
           <Badge
             variant="secondary"
-            className="aspect-[3/4] rounded-md px-2 py-1 text-base font-semibold"
+            className="aspect-[3/4] rounded-md px-2 py-1 text-base font-medium"
           >
             {vote.vote_value}
           </Badge>

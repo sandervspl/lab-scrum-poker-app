@@ -8,7 +8,7 @@ export function Header() {
       <div className="container mx-auto flex h-14 items-center px-4">
         <Link
           href="/"
-          className="hover:text-primary flex items-center gap-2 text-lg font-semibold transition-colors"
+          className="hover:text-primary flex items-center gap-2 text-lg font-medium transition-colors"
         >
           <Image
             src="https://www.labdigital.nl/images/logo.svg"
