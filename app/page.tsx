@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CreateRoomButton } from './_components/create-room-button';
 import { Rooms, RoomsSkeleton } from './_components/rooms';
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
     <main className="from-background via-background to-muted/20 mt-8 flex min-h-[calc(100vh-3.5rem)] justify-center bg-linear-to-br p-4 shadow-none">
       <div className="w-full max-w-2xl space-y-6">
