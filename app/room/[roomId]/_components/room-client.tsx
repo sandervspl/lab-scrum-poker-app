@@ -21,8 +21,8 @@ import { PresentationModeToggle } from './presentation-mode-toggle';
 import { PresentationSidebar } from './presentation-sidebar';
 import { RoomHeader } from './room-header';
 import { RoomName } from './room-name';
+import { SettingsModal } from './settings-modal';
 import { VotingCards } from './voting-cards';
-import { VotingModeToggle } from './voting-mode-toggle';
 
 type Props = {
   roomId: string;
@@ -108,7 +108,7 @@ export function RoomClient({ roomId, participantId }: Props) {
       <div className="from-background via-background to-muted/20 min-h[calc(100vh-3.5rem)] container mx-auto bg-linear-to-br px-4 py-8">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            {isAdmin && <VotingModeToggle room={room.data} />}
+            {isAdmin && <SettingsModal room={room.data} />}
             <PresentationModeToggle className={isAdmin ? '' : 'ml-auto'} />
           </div>
           <VotingCards participantId={participantId!} />
