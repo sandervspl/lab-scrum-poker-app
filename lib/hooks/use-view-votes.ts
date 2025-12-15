@@ -47,7 +47,7 @@ export function useViewVotes() {
         !hasCelebrated &&
         votes.data &&
         participants.data &&
-        allVotesMatch(votes.data, participants.data)
+        allVotesMatch(votes.data, participants.data, room?.data?.voting_mode)
       ) {
         shootConfetti();
         setHasCelebrated(true);

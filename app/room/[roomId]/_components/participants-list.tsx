@@ -31,9 +31,11 @@ export function ParticipantsList({
   const sortedParticipants = sortParticipantsByVote(
     participants,
     votes,
-    room?.votes_revealed ?? false,
+    room.votes_revealed ?? false,
+    room.voting_mode,
   );
-  const averageVote = votes ? calculateAverage(votes) : null;
+  const averageVote = votes ? calculateAverage(votes, room.voting_mode) : null;
+  const isTshirtMode = room.voting_mode === 'tshirt';
 
   return (
     <Card className="shadow-none">
@@ -45,7 +47,9 @@ export function ParticipantsList({
           </CardTitle>
           {room?.votes_revealed && averageVote && (
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">Average:</span>
+              <span className="text-muted-foreground text-sm">
+                {isTshirtMode ? 'Mode:' : 'Average:'}
+              </span>
               <Badge variant="default" className="px-3 py-0 text-lg font-bold">
                 {averageVote}
               </Badge>

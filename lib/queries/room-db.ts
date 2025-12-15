@@ -35,3 +35,11 @@ export async function resetVotesOfRoom(supabase: TypedSupabaseClient, roomId: st
     supabase.from('rooms').update({ votes_revealed: false }).eq('id', roomId),
   ]);
 }
+
+export async function updateVotingMode(
+  supabase: TypedSupabaseClient,
+  roomId: string,
+  votingMode: 'fibonacci' | 'tshirt',
+) {
+  return supabase.from('rooms').update({ voting_mode: votingMode }).eq('id', roomId);
+}

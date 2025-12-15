@@ -17,13 +17,16 @@ type Props = {
 export function AdminControls({ room }: Props) {
   const supabase = getSupabaseBrowserClient();
   const { data: votes } = useSuspenseQuery(votesQueryOptions(supabase, room.id));
-  const averageVote = votes.data ? calculateAverage(votes.data) : null;
+  const averageVote = votes.data ? calculateAverage(votes.data, room.voting_mode) : null;
+  const isTshirtMode = room.voting_mode === 'tshirt';
 
   return (
     <div className="flex items-center gap-3">
       {room?.votes_revealed && averageVote && (
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-sm">Average:</span>
+          <span className="text-muted-foreground text-sm">
+            {isTshirtMode ? 'Mode:' : 'Average:'}
+          </span>
           <Badge variant="default" className="px-3 py-0 text-lg font-bold">
             {averageVote}
           </Badge>

@@ -53,6 +53,7 @@ export type Database = {
           id: string
           room_name: string | null
           votes_revealed: boolean | null
+          voting_mode: Database["public"]["Enums"]["voting_mode_type"]
         }
         Insert: {
           admin_id: string
@@ -60,6 +61,7 @@ export type Database = {
           id?: string
           room_name?: string | null
           votes_revealed?: boolean | null
+          voting_mode?: Database["public"]["Enums"]["voting_mode_type"]
         }
         Update: {
           admin_id?: string
@@ -67,6 +69,7 @@ export type Database = {
           id?: string
           room_name?: string | null
           votes_revealed?: boolean | null
+          voting_mode?: Database["public"]["Enums"]["voting_mode_type"]
         }
         Relationships: []
       }
@@ -110,7 +113,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      voting_mode_type: "fibonacci" | "tshirt"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -237,6 +240,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      voting_mode_type: ["fibonacci", "tshirt"],
+    },
   },
 } as const
