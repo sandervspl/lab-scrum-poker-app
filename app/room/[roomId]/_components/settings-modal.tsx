@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useOptimistic, useState, useTransition } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -212,22 +212,33 @@ function VotingSettings({
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingMode, setPendingMode] = useState<VotingMode | null>(null);
   const hasVotes = (votes.data?.length ?? 0) > 0;
+  const [, startTransition] = useTransition();
+  const [optimisticVotingMode, setOptimisticVotingMode] = useOptimistic(
+    room.voting_mode,
+    (_current, newMode: VotingMode) => newMode,
+  );
 
   async function changeVotingMode(newMode: VotingMode) {
-    if (hasVotes) {
-      await resetVotesOfRoom(supabase, roomId);
-      setHasCelebrated(false);
-    }
-
-    await updateVotingMode(supabase, roomId, newMode);
-    await queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
-    await queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
+    setOptimisticVotingMode(newMode);
     setShowConfirm(false);
     setPendingMode(null);
+
+    startTransition(async () => {
+      if (hasVotes) {
+        await resetVotesOfRoom(supabase, roomId);
+        setHasCelebrated(false);
+      }
+
+      await updateVotingMode(supabase, roomId, newMode);
+      await Promise.all([
+        queryClient.invalidateQueries(roomQueryOptions(supabase, roomId)),
+        await queryClient.invalidateQueries(votesQueryOptions(supabase, roomId)),
+      ]);
+    });
   }
 
   function handleModeSelect(newMode: VotingMode) {
-    if (newMode === room.voting_mode) {
+    if (newMode === optimisticVotingMode) {
       return;
     }
     if (hasVotes) {
@@ -249,14 +260,14 @@ function VotingSettings({
           <label className="text-sm font-medium">Voting Mode</label>
           <div className="grid gap-3">
             <VotingModeCard
-              selected={room.voting_mode === 'fibonacci'}
+              selected={optimisticVotingMode === 'fibonacci'}
               onClick={() => handleModeSelect('fibonacci')}
               icon={<HashIcon className="size-5" />}
               title="Fibonacci"
               description="0, 1, 2, 3, 5, 8, 13, 21"
             />
             <VotingModeCard
-              selected={room.voting_mode === 'tshirt'}
+              selected={optimisticVotingMode === 'tshirt'}
               onClick={() => handleModeSelect('tshirt')}
               icon={<ShirtIcon className="size-5" />}
               title="T-Shirt Sizing"
