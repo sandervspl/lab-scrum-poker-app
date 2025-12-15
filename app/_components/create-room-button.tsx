@@ -18,14 +18,10 @@ export function CreateRoomButton() {
       const supabase = getSupabaseBrowserClient();
       const participantId = getParticipantCookie(Cookies)!;
 
-      const words = await fetch('https://random-word-api.herokuapp.com/word?number=3').then(
-        (res) => res.json() as Promise<string[]>,
-      );
-
       const { data: room, error } = await supabase
         .from('rooms')
         .insert({
-          room_name: words.join('-'),
+          room_name: 'New room',
           admin_id: participantId,
           votes_revealed: false,
         })
