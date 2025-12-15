@@ -17,13 +17,26 @@ import { updateRoomNameInHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
-import { TSHIRT_DEFAULT_DEFINITIONS, VotingMode } from '@/types';
+import {
+  getTshirtDefinitions,
+  TSHIRT_DEFAULT_DEFINITIONS,
+  TSHIRT_VALUES,
+  TshirtDefinitions,
+  VotingMode,
+} from '@/types';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
-import { HashIcon, PencilIcon, SettingsIcon, ShirtIcon } from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  HashIcon,
+  PencilIcon,
+  SettingsIcon,
+  ShirtIcon,
+} from 'lucide-react';
 
 import { useRoomContext } from './context';
 
-type SettingsPage = 'general' | 'voting';
+type SettingsPage = 'general' | 'voting' | 'tshirt-definitions';
 
 const SETTINGS_PAGES: { id: SettingsPage; label: string; icon: React.ReactNode }[] = [
   { id: 'general', label: 'General', icon: <PencilIcon className="size-4" /> },
@@ -48,7 +61,7 @@ export function SettingsModal({ room }: Props) {
       </DialogTrigger>
       <DialogContent
         showCloseButton
-        className="flex h-[460px] gap-0 overflow-hidden p-0 md:max-w-2xl"
+        className="flex h-[500px] gap-0 overflow-hidden p-0 md:max-w-2xl"
       >
         <DialogTitle className="sr-only">Room Settings</DialogTitle>
         <DialogDescription className="sr-only">
@@ -80,9 +93,12 @@ export function SettingsModal({ room }: Props) {
         </nav>
 
         {/* Content */}
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {activePage === 'general' && <GeneralSettings room={room} />}
-          {activePage === 'voting' && <VotingSettings room={room} />}
+          {activePage === 'voting' && <VotingSettings room={room} onNavigate={setActivePage} />}
+          {activePage === 'tshirt-definitions' && (
+            <TshirtDefinitionsSettings room={room} onBack={() => setActivePage('voting')} />
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -128,12 +144,12 @@ function GeneralSettings({ room }: { room: Database['public']['Tables']['rooms']
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="border-b px-6 py-4">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <header className="shrink-0 border-b px-6 py-4">
         <h3 className="text-lg font-semibold">General</h3>
         <p className="text-muted-foreground text-sm">Manage general room settings</p>
       </header>
-      <div className="flex flex-1 flex-col gap-6 p-6">
+      <div className="min-h-0 flex-1 overflow-y-auto p-6">
         <div className="space-y-2">
           <label htmlFor="room-name" className="text-sm font-medium">
             Room Name
@@ -150,7 +166,7 @@ function GeneralSettings({ room }: { room: Database['public']['Tables']['rooms']
           </p>
         </div>
       </div>
-      <footer className="border-t px-6 py-4">
+      <footer className="shrink-0 border-t px-6 py-4">
         <Button onClick={handleSave} disabled={!hasChanges || isSaving} size="sm">
           {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
@@ -159,7 +175,13 @@ function GeneralSettings({ room }: { room: Database['public']['Tables']['rooms']
   );
 }
 
-function VotingSettings({ room }: { room: Database['public']['Tables']['rooms']['Row'] }) {
+function VotingSettings({
+  room,
+  onNavigate,
+}: {
+  room: Database['public']['Tables']['rooms']['Row'];
+  onNavigate: (page: SettingsPage) => void;
+}) {
   const { roomId } = useParams<{ roomId: string }>();
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
@@ -195,12 +217,12 @@ function VotingSettings({ room }: { room: Database['public']['Tables']['rooms'][
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="border-b px-6 py-4">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <header className="shrink-0 border-b px-6 py-4">
         <h3 className="text-lg font-semibold">Voting</h3>
         <p className="text-muted-foreground text-sm">Configure voting options for this room</p>
       </header>
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
         <div className="space-y-3">
           <label className="text-sm font-medium">Voting Mode</label>
           <div className="grid gap-3">
@@ -221,21 +243,15 @@ function VotingSettings({ room }: { room: Database['public']['Tables']['rooms'][
           </div>
         </div>
 
-        {room.voting_mode === 'tshirt' && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium">T-Shirt Size Guide</label>
-            <div className="bg-muted/50 rounded-lg p-3">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                {Object.entries(TSHIRT_DEFAULT_DEFINITIONS).map(([size, definition]) => (
-                  <div key={size} className="flex justify-between">
-                    <span className="font-semibold">{size}</span>
-                    <span className="text-muted-foreground">{definition}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <Button
+          variant="outline"
+          onClick={() => onNavigate('tshirt-definitions')}
+          className="w-full justify-start gap-2"
+        >
+          <ShirtIcon className="size-4" />
+          T-Shirt Sizing Definitions
+          <ChevronRightIcon className="text-sidebar-foreground ml-auto size-4" />
+        </Button>
 
         {/* Confirmation dialog for changing mode with existing votes */}
         {showConfirm && (
@@ -270,6 +286,84 @@ function VotingSettings({ room }: { room: Database['public']['Tables']['rooms'][
   );
 }
 
+function TshirtDefinitionsSettings({
+  room,
+  onBack,
+}: {
+  room: Database['public']['Tables']['rooms']['Row'];
+  onBack: () => void;
+}) {
+  const { roomId } = useParams<{ roomId: string }>();
+  const supabase = getSupabaseBrowserClient();
+  const queryClient = useQueryClient();
+
+  const currentDefinitions = getTshirtDefinitions(room.tshirt_definitions as TshirtDefinitions);
+  const [definitions, setDefinitions] = useState<TshirtDefinitions>(currentDefinitions);
+  const [isSaving, setIsSaving] = useState(false);
+  const definitionSizes = TSHIRT_VALUES.filter((v) => v !== '?' && v !== '☕');
+
+  const hasChanges = JSON.stringify(definitions) !== JSON.stringify(currentDefinitions);
+
+  async function handleSave() {
+    setIsSaving(true);
+
+    const { error } = await supabase
+      .from('rooms')
+      .update({ tshirt_definitions: definitions })
+      .eq('id', roomId);
+
+    if (error) {
+      console.error('Error saving definitions:', error);
+    } else {
+      await queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
+    }
+
+    setIsSaving(false);
+  }
+
+  function handleReset() {
+    setDefinitions(TSHIRT_DEFAULT_DEFINITIONS);
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <header className="shrink-0 border-b px-6 py-4">
+        <Button onClick={onBack} variant="outline" size="icon" className="mb-2 size-8">
+          <ChevronLeftIcon className="size-4" />
+        </Button>
+        <h3 className="text-lg font-semibold">T-Shirt Sizing Definitions</h3>
+        <p className="text-muted-foreground text-sm">
+          Customize what each size means for this room
+        </p>
+      </header>
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
+        {definitionSizes.map((size) => (
+          <div key={size} className="flex items-center gap-3">
+            <span className="w-10 text-sm font-semibold">{size}</span>
+            <Input
+              value={definitions[size] ?? ''}
+              onChange={(e) => setDefinitions((prev) => ({ ...prev, [size]: e.target.value }))}
+              placeholder={TSHIRT_DEFAULT_DEFINITIONS[size]}
+              className="h-9"
+            />
+          </div>
+        ))}
+        <p className="text-muted-foreground text-xs">
+          These definitions are shown on voting cards when using T-Shirt sizing
+        </p>
+      </div>
+      <footer className="flex shrink-0 items-center justify-between border-t px-6 py-4">
+        <Button variant="ghost" size="sm" onClick={handleReset}>
+          Reset to defaults
+        </Button>
+        <Button onClick={handleSave} disabled={!hasChanges || isSaving} size="sm">
+          {isSaving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </footer>
+    </div>
+  );
+}
+
 function VotingModeCard({
   selected,
   onClick,
@@ -290,7 +384,7 @@ function VotingModeCard({
         'flex items-center gap-3 rounded-lg border p-4 text-left transition-all',
         selected
           ? 'border-primary bg-primary/5 ring-primary/20 ring-2'
-          : 'hover:bg-muted/50 border-border cursor-pointer',
+          : 'hover:bg-accent border-border cursor-pointer',
       )}
     >
       <div

@@ -23,6 +23,17 @@ export const TSHIRT_NUMERIC_VALUES: Record<string, number> = {
 
 export type VotingMode = 'fibonacci' | 'tshirt';
 
+export type TshirtDefinitions = Record<string, string>;
+
 export function getVotingValues(mode: VotingMode | null): readonly string[] {
   return mode === 'tshirt' ? TSHIRT_VALUES : POKER_VALUES;
+}
+
+export function getTshirtDefinitions(
+  customDefinitions: TshirtDefinitions | null | undefined,
+): TshirtDefinitions {
+  if (!customDefinitions || Object.keys(customDefinitions).length === 0) {
+    return TSHIRT_DEFAULT_DEFINITIONS;
+  }
+  return { ...TSHIRT_DEFAULT_DEFINITIONS, ...customDefinitions };
 }

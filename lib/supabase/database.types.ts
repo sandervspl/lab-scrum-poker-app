@@ -52,6 +52,7 @@ export type Database = {
           created_at: string | null
           id: string
           room_name: string | null
+          tshirt_definitions: Json | null
           votes_revealed: boolean | null
           voting_mode: Database["public"]["Enums"]["voting_mode_type"]
         }
@@ -60,6 +61,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           room_name?: string | null
+          tshirt_definitions?: Json | null
           votes_revealed?: boolean | null
           voting_mode?: Database["public"]["Enums"]["voting_mode_type"]
         }
@@ -68,6 +70,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           room_name?: string | null
+          tshirt_definitions?: Json | null
           votes_revealed?: boolean | null
           voting_mode?: Database["public"]["Enums"]["voting_mode_type"]
         }

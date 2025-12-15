@@ -7,7 +7,7 @@ import { roomQueryOptions, votesQueryOptions } from '@/lib/queries/room-queries'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
-import { getVotingValues, TSHIRT_DEFAULT_DEFINITIONS } from '@/types';
+import { getTshirtDefinitions, getVotingValues, TshirtDefinitions } from '@/types';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 
 export function VotingCards({ participantId }: { participantId: string }) {
@@ -22,6 +22,7 @@ export function VotingCards({ participantId }: { participantId: string }) {
   const votingMode = room.data?.voting_mode ?? 'fibonacci';
   const votingValues = getVotingValues(votingMode);
   const isTshirtMode = votingMode === 'tshirt';
+  const definitions = getTshirtDefinitions(room.data?.tshirt_definitions as TshirtDefinitions);
 
   async function castVote(value: string) {
     if (!participantId) {
@@ -63,7 +64,7 @@ export function VotingCards({ participantId }: { participantId: string }) {
           )}
         >
           {votingValues.map((value) => {
-            // const definition = isTshirtMode ? TSHIRT_DEFINITIONS[value] : undefined;
+            const definition = isTshirtMode ? definitions[value] : undefined;
             return (
               <button
                 key={value}
@@ -77,10 +78,10 @@ export function VotingCards({ participantId }: { participantId: string }) {
                 )}
               >
                 <span className="text-2xl font-bold">{value}</span>
-                {/* {definition && (
+                {definition && (
                   <span
                     className={cn(
-                      'mt-1 text-[10px] leading-tight',
+                      'mt-1 max-w-full truncate px-1 text-[10px] leading-tight',
                       optimisticVote === value
                         ? 'text-primary-foreground/80'
                         : 'text-muted-foreground',
@@ -88,7 +89,7 @@ export function VotingCards({ participantId }: { participantId: string }) {
                   >
                     {definition}
                   </span>
-                )} */}
+                )}
               </button>
             );
           })}
