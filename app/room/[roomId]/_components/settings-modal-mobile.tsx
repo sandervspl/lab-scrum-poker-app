@@ -4,14 +4,13 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
-import { useIsMobile } from '@/lib/hooks/use-mobile';
 import { resetVotesOfRoom, updateVotingMode } from '@/lib/queries/room-db';
 import { roomQueryOptions, votesQueryOptions } from '@/lib/queries/room-queries';
 import { updateRoomNameInHistory } from '@/lib/room-history';
@@ -36,98 +35,114 @@ import {
 } from 'lucide-react';
 
 import { useRoomContext } from './context';
-import { SettingsModalMobile } from './settings-modal-mobile';
 
 type SettingsPage = 'general' | 'voting' | 'tshirt-definitions';
-
-const SETTINGS_PAGES: { id: SettingsPage; label: string; icon: React.ReactNode }[] = [
-  { id: 'general', label: 'General', icon: <PencilIcon className="size-4" /> },
-  { id: 'voting', label: 'Voting', icon: <HashIcon className="size-4" /> },
-];
 
 type Props = {
   room: Database['public']['Tables']['rooms']['Row'];
 };
 
-export function SettingsModal({ room }: Props) {
-  const isMobile = useIsMobile();
-
-  // Show nothing during SSR/hydration to prevent layout shift
-  if (isMobile === undefined) {
-    return (
-      <Button variant="outline" size="sm" className="gap-1.5" disabled>
-        <SettingsIcon className="size-4" />
-        <span className="hidden sm:inline">Settings</span>
-      </Button>
-    );
-  }
-
-  if (isMobile) {
-    return <SettingsModalMobile room={room} />;
-  }
-
-  return <SettingsModalDesktop room={room} />;
-}
-
-function SettingsModalDesktop({ room }: Props) {
+export function SettingsModalMobile({ room }: Props) {
   const [open, setOpen] = useState(false);
   const [activePage, setActivePage] = useState<SettingsPage>('general');
 
+  function handleBack() {
+    if (activePage === 'tshirt-definitions') {
+      setActivePage('voting');
+    }
+  }
+
+  const showBackButton = activePage === 'tshirt-definitions';
+  const pageTitle =
+    activePage === 'general'
+      ? 'General'
+      : activePage === 'voting'
+        ? 'Voting'
+        : 'T-Shirt Definitions';
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
           <SettingsIcon className="size-4" />
           <span className="hidden sm:inline">Settings</span>
         </Button>
-      </DialogTrigger>
-      <DialogContent
-        showCloseButton
-        className="flex h-[500px] gap-0 overflow-hidden p-0 md:max-w-2xl"
-      >
-        <DialogTitle className="sr-only">Room Settings</DialogTitle>
-        <DialogDescription className="sr-only">
+      </DrawerTrigger>
+      <DrawerContent className="max-h-[85vh]">
+        <DrawerTitle className="sr-only">Room Settings</DrawerTitle>
+        <DrawerDescription className="sr-only">
           Configure your room settings here.
-        </DialogDescription>
+        </DrawerDescription>
 
-        {/* Sidebar */}
-        <nav className="bg-muted/30 flex w-48 shrink-0 flex-col border-r">
-          <div className="border-b px-4 py-3">
-            <h2 className="text-sm font-semibold">Settings</h2>
+        {/* Header with title and tabs */}
+        <div className="border-b px-4 pb-3">
+          <div className="flex items-center gap-2">
+            {showBackButton && (
+              <Button variant="ghost" size="icon" className="size-8" onClick={handleBack}>
+                <ChevronLeftIcon className="size-4" />
+              </Button>
+            )}
+            <h2 className="text-base font-semibold">{pageTitle}</h2>
           </div>
-          <div className="flex flex-col gap-1 p-2">
-            {SETTINGS_PAGES.map((page) => (
-              <button
-                key={page.id}
-                onClick={() => setActivePage(page.id)}
-                className={cn(
-                  'flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors',
-                  activePage === page.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                )}
-              >
-                {page.icon}
-                {page.label}
-              </button>
-            ))}
-          </div>
-        </nav>
 
-        {/* Content */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          {activePage === 'general' && <GeneralSettings room={room} />}
-          {activePage === 'voting' && <VotingSettings room={room} onNavigate={setActivePage} />}
-          {activePage === 'tshirt-definitions' && (
-            <TshirtDefinitionsSettings room={room} onBack={() => setActivePage('voting')} />
+          {/* Tab navigation - hide when in nested page */}
+          {activePage !== 'tshirt-definitions' && (
+            <div className="mt-3 flex gap-1">
+              <TabButton
+                active={activePage === 'general'}
+                onClick={() => setActivePage('general')}
+                icon={<PencilIcon className="size-3.5" />}
+                label="General"
+              />
+              <TabButton
+                active={activePage === 'voting'}
+                onClick={() => setActivePage('voting')}
+                icon={<HashIcon className="size-3.5" />}
+                label="Voting"
+              />
+            </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          {activePage === 'general' && <MobileGeneralSettings room={room} />}
+          {activePage === 'voting' && (
+            <MobileVotingSettings room={room} onNavigate={setActivePage} />
+          )}
+          {activePage === 'tshirt-definitions' && <MobileTshirtDefinitionsSettings room={room} />}
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
-function GeneralSettings({ room }: { room: Database['public']['Tables']['rooms']['Row'] }) {
+function TabButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+      )}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function MobileGeneralSettings({ room }: { room: Database['public']['Tables']['rooms']['Row'] }) {
   const supabase = getSupabaseBrowserClient();
   const { roomId } = useParams<{ roomId: string }>();
   const queryClient = useQueryClient();
@@ -166,18 +181,14 @@ function GeneralSettings({ room }: { room: Database['public']['Tables']['rooms']
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <header className="shrink-0 border-b px-6 py-4">
-        <h3 className="text-lg font-semibold">General</h3>
-        <p className="text-muted-foreground text-sm">Manage general room settings</p>
-      </header>
-      <div className="min-h-0 flex-1 overflow-y-auto p-6">
+    <div className="flex flex-col">
+      <div className="space-y-4 p-4">
         <div className="space-y-2">
-          <label htmlFor="room-name" className="text-sm font-medium">
+          <label htmlFor="room-name-mobile" className="text-sm font-medium">
             Room Name
           </label>
           <Input
-            id="room-name"
+            id="room-name-mobile"
             value={roomName}
             onChange={(e) => handleNameChange(e.target.value)}
             placeholder="Enter room name"
@@ -188,16 +199,16 @@ function GeneralSettings({ room }: { room: Database['public']['Tables']['rooms']
           </p>
         </div>
       </div>
-      <footer className="shrink-0 border-t px-6 py-4">
-        <Button onClick={handleSave} disabled={!hasChanges || isSaving} size="sm">
+      <div className="border-t p-4">
+        <Button onClick={handleSave} disabled={!hasChanges || isSaving} size="sm" className="w-full">
           {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
-      </footer>
+      </div>
     </div>
   );
 }
 
-function VotingSettings({
+function MobileVotingSettings({
   room,
   onNavigate,
 }: {
@@ -239,26 +250,22 @@ function VotingSettings({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <header className="shrink-0 border-b px-6 py-4">
-        <h3 className="text-lg font-semibold">Voting</h3>
-        <p className="text-muted-foreground text-sm">Configure voting options for this room</p>
-      </header>
-      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
+    <div className="flex flex-col">
+      <div className="space-y-4 p-4">
         <div className="space-y-3">
           <label className="text-sm font-medium">Voting Mode</label>
-          <div className="grid gap-3">
-            <VotingModeCard
+          <div className="grid gap-2">
+            <MobileVotingModeCard
               selected={room.voting_mode === 'fibonacci'}
               onClick={() => handleModeSelect('fibonacci')}
-              icon={<HashIcon className="size-5" />}
+              icon={<HashIcon className="size-4" />}
               title="Fibonacci"
               description="0, 1, 2, 3, 5, 8, 13, 21"
             />
-            <VotingModeCard
+            <MobileVotingModeCard
               selected={room.voting_mode === 'tshirt'}
               onClick={() => handleModeSelect('tshirt')}
-              icon={<ShirtIcon className="size-5" />}
+              icon={<ShirtIcon className="size-4" />}
               title="T-Shirt Sizing"
               description="XS, S, M, L, XL, XXL"
             />
@@ -268,16 +275,17 @@ function VotingSettings({
         <Button
           variant="outline"
           onClick={() => onNavigate('tshirt-definitions')}
-          className="w-full justify-start gap-2"
+          className="w-full justify-between"
         >
-          <ShirtIcon className="size-4" />
-          T-Shirt Sizing Definitions
-          <ChevronRightIcon className="text-sidebar-foreground ml-auto size-4" />
+          <span className="flex items-center gap-2">
+            <ShirtIcon className="size-4" />
+            T-Shirt Definitions
+          </span>
+          <ChevronRightIcon className="text-muted-foreground size-4" />
         </Button>
 
-        {/* Confirmation dialog for changing mode with existing votes */}
         {showConfirm && (
-          <div className="bg-destructive/10 border-destructive/30 space-y-3 rounded-lg border p-4">
+          <div className="bg-destructive/10 border-destructive/30 space-y-3 rounded-lg border p-3">
             <p className="text-sm font-medium">
               Switching to {pendingMode === 'tshirt' ? 'T-Shirt sizing' : 'Fibonacci'} will reset
               all current votes.
@@ -286,13 +294,15 @@ function VotingSettings({
               <Button
                 size="sm"
                 variant="destructive"
+                className="flex-1"
                 onClick={() => pendingMode && changeVotingMode(pendingMode)}
               >
-                Switch Mode
+                Switch
               </Button>
               <Button
                 size="sm"
                 variant="outline"
+                className="flex-1"
                 onClick={() => {
                   setShowConfirm(false);
                   setPendingMode(null);
@@ -308,12 +318,10 @@ function VotingSettings({
   );
 }
 
-function TshirtDefinitionsSettings({
+function MobileTshirtDefinitionsSettings({
   room,
-  onBack,
 }: {
   room: Database['public']['Tables']['rooms']['Row'];
-  onBack: () => void;
 }) {
   const { roomId } = useParams<{ roomId: string }>();
   const supabase = getSupabaseBrowserClient();
@@ -348,17 +356,11 @@ function TshirtDefinitionsSettings({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <header className="shrink-0 border-b px-6 py-4">
-        <Button onClick={onBack} variant="outline" size="icon" className="mb-2 size-8">
-          <ChevronLeftIcon className="size-4" />
-        </Button>
-        <h3 className="text-lg font-semibold">T-Shirt Sizing Definitions</h3>
-        <p className="text-muted-foreground text-sm">
+    <div className="flex flex-col">
+      <div className="space-y-3 p-4">
+        <p className="text-muted-foreground text-xs">
           Customize what each size means for this room
         </p>
-      </header>
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
         {definitionSizes.map((size) => (
           <div key={size} className="flex items-center gap-3">
             <span className="w-10 text-sm font-semibold">{size}</span>
@@ -370,23 +372,20 @@ function TshirtDefinitionsSettings({
             />
           </div>
         ))}
-        <p className="text-muted-foreground text-xs">
-          These definitions are shown on voting cards when using T-Shirt sizing
-        </p>
       </div>
-      <footer className="flex shrink-0 items-center justify-between border-t px-6 py-4">
+      <div className="flex items-center justify-between gap-2 border-t p-4">
         <Button variant="ghost" size="sm" onClick={handleReset}>
-          Reset to defaults
+          Reset
         </Button>
         <Button onClick={handleSave} disabled={!hasChanges || isSaving} size="sm">
-          {isSaving ? 'Saving...' : 'Save Changes'}
+          {isSaving ? 'Saving...' : 'Save'}
         </Button>
-      </footer>
+      </div>
     </div>
   );
 }
 
-function VotingModeCard({
+function MobileVotingModeCard({
   selected,
   onClick,
   icon,
@@ -403,26 +402,26 @@ function VotingModeCard({
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 rounded-lg border p-4 text-left transition-all',
+        'flex items-center gap-3 rounded-lg border p-3 text-left transition-all',
         selected
           ? 'border-primary bg-primary/5 ring-primary/20 ring-2'
-          : 'hover:bg-accent border-border cursor-pointer',
+          : 'hover:bg-accent border-border',
       )}
     >
       <div
         className={cn(
-          'flex size-10 items-center justify-center rounded-lg',
+          'flex size-9 items-center justify-center rounded-lg',
           selected ? 'bg-primary text-primary-foreground' : 'bg-muted',
         )}
       >
         {icon}
       </div>
-      <div className="flex-1">
-        <div className="font-medium">{title}</div>
-        <div className="text-muted-foreground text-sm">{description}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium">{title}</div>
+        <div className="text-muted-foreground truncate text-xs">{description}</div>
       </div>
       {selected && (
-        <div className="bg-primary size-5 rounded-full p-0.5 text-white">
+        <div className="bg-primary size-4 shrink-0 rounded-full p-0.5 text-white">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -431,3 +430,4 @@ function VotingModeCard({
     </button>
   );
 }
+
