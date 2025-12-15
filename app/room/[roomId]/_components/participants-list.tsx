@@ -2,10 +2,10 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { calculateAverage, sortParticipantsByVote } from '@/lib/room-utils';
+import { calculateAverage, isRoomAdmin, sortParticipantsByVote } from '@/lib/room-utils';
 import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
-import { Users } from 'lucide-react';
+import { CrownIcon, Users } from 'lucide-react';
 
 import { AdminControls } from './admin-controls';
 import { ParticipantName } from './participant-name';
@@ -98,6 +98,7 @@ function ParticipantRow({
 }) {
   const vote = votes.find((v) => v.participant_id === participant.participant_id);
   const hasVoted = vote?.vote_value !== null && vote?.vote_value !== undefined;
+  const isParticipantAdmin = isRoomAdmin(room, participant.participant_id);
 
   return (
     <div key={participant.id} className="bg-muted/80 flex items-center gap-4 rounded-lg p-3">
@@ -119,6 +120,7 @@ function ParticipantRow({
             roomId={room.id}
             userId={userId}
           />
+          {isParticipantAdmin && <CrownIcon className="size-4 text-amber-500" />}
         </div>
       </div>
       <div className="flex items-center gap-2">

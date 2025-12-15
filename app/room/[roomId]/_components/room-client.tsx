@@ -10,6 +10,7 @@ import {
   roomQueryOptions,
   votesQueryOptions,
 } from '@/lib/queries/room-queries';
+import { isRoomAdmin } from '@/lib/room-utils';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
@@ -39,7 +40,7 @@ export function RoomClient({ roomId, participantId }: Props) {
   const { data: participants } = useSuspenseQuery(participantsQueryOptions(supabase, roomId));
   const { data: votes } = useSuspenseQuery(votesQueryOptions(supabase, roomId));
 
-  const isAdmin = participantId === room.data?.admin_id;
+  const isAdmin = room.data ? isRoomAdmin(room.data, participantId) : false;
 
   if (!room.data || !participants.data || !votes.data) {
     return (

@@ -12,8 +12,13 @@ import {
 } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { resetVotesOfRoom, updateVotingMode } from '@/lib/queries/room-db';
-import { roomQueryOptions, votesQueryOptions } from '@/lib/queries/room-queries';
+import {
+  participantsQueryOptions,
+  roomQueryOptions,
+  votesQueryOptions,
+} from '@/lib/queries/room-queries';
 import { updateRoomNameInHistory } from '@/lib/room-history';
+import { getAdminIds, isRoomAdmin } from '@/lib/room-utils';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
@@ -28,6 +33,7 @@ import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  CrownIcon,
   HashIcon,
   PencilIcon,
   SettingsIcon,
@@ -36,7 +42,7 @@ import {
 
 import { useRoomContext } from './context';
 
-type SettingsPage = 'general' | 'voting' | 'tshirt-definitions';
+type SettingsPage = 'general' | 'voting' | 'tshirt-definitions' | 'admins';
 
 type Props = {
   room: Database['public']['Tables']['rooms']['Row'];
@@ -58,7 +64,9 @@ export function SettingsModalMobile({ room }: Props) {
       ? 'General'
       : activePage === 'voting'
         ? 'Voting'
-        : 'T-Shirt Definitions';
+        : activePage === 'admins'
+          ? 'Admins'
+          : 'T-Shirt Definitions';
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
@@ -95,6 +103,12 @@ export function SettingsModalMobile({ room }: Props) {
                 label="General"
               />
               <TabButton
+                active={activePage === 'admins'}
+                onClick={() => setActivePage('admins')}
+                icon={<CrownIcon className="size-3.5" />}
+                label="Admins"
+              />
+              <TabButton
                 active={activePage === 'voting'}
                 onClick={() => setActivePage('voting')}
                 icon={<HashIcon className="size-3.5" />}
@@ -111,6 +125,7 @@ export function SettingsModalMobile({ room }: Props) {
             <MobileVotingSettings room={room} onNavigate={setActivePage} />
           )}
           {activePage === 'tshirt-definitions' && <MobileTshirtDefinitionsSettings room={room} />}
+          {activePage === 'admins' && <MobileAdminsSettings room={room} />}
         </div>
       </DrawerContent>
     </Drawer>
@@ -396,6 +411,95 @@ function MobileTshirtDefinitionsSettings({
         <Button onClick={handleSave} disabled={!hasChanges || isSaving} size="sm">
           {isSaving ? 'Saving...' : 'Save'}
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function MobileAdminsSettings({ room }: { room: Database['public']['Tables']['rooms']['Row'] }) {
+  const { roomId } = useParams<{ roomId: string }>();
+  const supabase = getSupabaseBrowserClient();
+  const queryClient = useQueryClient();
+  const { data: participants } = useSuspenseQuery(participantsQueryOptions(supabase, roomId));
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+
+  const adminIds = getAdminIds(room);
+
+  async function toggleAdmin(participantId: string, isCurrentlyAdmin: boolean) {
+    setIsUpdating(participantId);
+
+    const newAdminIds = isCurrentlyAdmin
+      ? adminIds.filter((id) => id !== participantId)
+      : [...adminIds, participantId];
+
+    // Don't allow removing the last admin
+    if (newAdminIds.length === 0) {
+      setIsUpdating(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('rooms')
+      .update({ admin_ids: newAdminIds })
+      .eq('id', roomId);
+
+    if (error) {
+      console.error('Error updating admins:', error);
+    } else {
+      await queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
+    }
+
+    setIsUpdating(null);
+  }
+
+  return (
+    <div className="flex flex-col">
+      <div className="space-y-2 p-4">
+        <p className="text-muted-foreground mb-3 text-xs">
+          Admins can reveal votes, reset votes, and change room settings.
+        </p>
+        {participants.data?.map((participant) => {
+          const isAdmin = isRoomAdmin(room, participant.participant_id);
+          const isOnlyAdmin = isAdmin && adminIds.length === 1;
+
+          return (
+            <div
+              key={participant.id}
+              className="bg-muted/50 flex items-center justify-between rounded-lg p-3"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    'flex size-8 items-center justify-center rounded-full text-sm font-medium',
+                    isAdmin
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200'
+                      : 'bg-secondary',
+                  )}
+                >
+                  {isAdmin ? (
+                    <CrownIcon className="size-4" />
+                  ) : (
+                    participant.name.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <span className="text-sm font-medium">{participant.name}</span>
+              </div>
+              <Button
+                variant={isAdmin ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => toggleAdmin(participant.participant_id, isAdmin)}
+                disabled={isUpdating === participant.participant_id || isOnlyAdmin}
+                className="h-7 text-xs"
+              >
+                {isUpdating === participant.participant_id
+                  ? '...'
+                  : isAdmin
+                    ? 'Admin'
+                    : 'Make Admin'}
+              </Button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -145,3 +145,25 @@ export function sortParticipantsByVote(
 export function randomInRange(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
+
+/**
+ * Get all admin IDs for a room (backwards compatible)
+ * Uses admin_ids if available, falls back to admin_id
+ */
+export function getAdminIds(room: Database['public']['Tables']['rooms']['Row']): string[] {
+  if (room.admin_ids && room.admin_ids.length > 0) {
+    return room.admin_ids;
+  }
+  return [room.admin_id];
+}
+
+/**
+ * Check if a participant is an admin (backwards compatible)
+ */
+export function isRoomAdmin(
+  room: Database['public']['Tables']['rooms']['Row'],
+  participantId: string | undefined | null,
+): boolean {
+  if (!participantId) return false;
+  return getAdminIds(room).includes(participantId);
+}
