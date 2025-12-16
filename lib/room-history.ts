@@ -91,3 +91,17 @@ export function updateRoomNameInHistory(roomId: string, roomName: string) {
     console.error('Error updating room name in history:', error);
   }
 }
+
+export function updateLastJoined(roomId: string, participantId: string) {
+  try {
+    const roomHistory = getRoomHistory(getRoomsCookie(Cookies), participantId);
+    const room = roomHistory.find((r) => r.roomId === roomId);
+
+    if (room) {
+      room.lastJoined = Date.now();
+      setRoomsCookie(roomHistory);
+    }
+  } catch (error) {
+    console.error('Error updating last joined:', error);
+  }
+}

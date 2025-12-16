@@ -10,6 +10,7 @@ import {
   roomQueryOptions,
   votesQueryOptions,
 } from '@/lib/queries/room-queries';
+import { updateLastJoined } from '@/lib/room-history';
 import { isRoomAdmin } from '@/lib/room-utils';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useSuspenseQuery } from '@tanstack/react-query';
@@ -58,6 +59,13 @@ export function RoomClient({ roomId, participantId }: Props) {
 
   // Subscribe to room updates
   useRealtime(roomId);
+
+  // Update lastJoined when visiting a room
+  useEffect(() => {
+    if (participantId) {
+      updateLastJoined(roomId, participantId);
+    }
+  }, [roomId, participantId]);
 
   // Toggle body class to hide global header in presentation mode
   useEffect(() => {
