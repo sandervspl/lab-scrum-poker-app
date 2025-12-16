@@ -4,6 +4,7 @@ import {
   roomQueryOptions,
   votesQueryOptions,
 } from '@/lib/queries/room-queries';
+import { updateRoomNameInHistory } from '@/lib/room-history';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -20,6 +21,13 @@ export function useRealtime(roomId: string) {
         (payload: any) => {
           console.log('Room updated:', payload);
           if (payload.new) {
+            // Update cookie if room name changed
+            if (
+              payload.new.room_name &&
+              payload.old?.room_name !== payload.new.room_name
+            ) {
+              updateRoomNameInHistory(roomId, payload.new.room_name);
+            }
             queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
             queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
           }
