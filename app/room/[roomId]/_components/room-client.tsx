@@ -80,7 +80,7 @@ export function RoomClient({ roomId, participantId }: Props) {
       <div className="container mx-auto space-y-6 px-4 py-8">
         <RoomHeader room={room.data} isAdmin={isAdmin} />
         <div className="grid gap-6 md:grid-cols-12">
-          <PresentationSidebar />
+          <PresentationSidebar room={room.data} isAdmin={isAdmin} />
           <div className="space-y-6 md:col-span-7 lg:col-span-9">
             <ParticipantsList
               participants={participants.data ?? []}

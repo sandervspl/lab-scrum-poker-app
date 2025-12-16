@@ -54,9 +54,10 @@ const SETTINGS_PAGES: { id: SettingsPage; label: string; icon: React.ReactNode }
 
 type Props = {
   room: Database['public']['Tables']['rooms']['Row'];
+  showLabel?: boolean;
 };
 
-export function SettingsModal({ room }: Props) {
+export function SettingsModal({ room, showLabel }: Props) {
   const isMobile = useIsMobile();
 
   // Show nothing during SSR/hydration to prevent layout shift
@@ -64,19 +65,20 @@ export function SettingsModal({ room }: Props) {
     return (
       <Button variant="outline" size="sm" className="gap-1.5" disabled>
         <SettingsIcon className="size-4" />
-        <span className="hidden sm:inline">Settings</span>
+        {showLabel && <span>Settings</span>}
+        {!showLabel && <span className="hidden sm:inline">Settings</span>}
       </Button>
     );
   }
 
   if (isMobile) {
-    return <SettingsModalMobile room={room} />;
+    return <SettingsModalMobile room={room} showLabel={showLabel} />;
   }
 
-  return <SettingsModalDesktop room={room} />;
+  return <SettingsModalDesktop room={room} showLabel={showLabel} />;
 }
 
-function SettingsModalDesktop({ room }: Props) {
+function SettingsModalDesktop({ room, showLabel }: Props) {
   const [open, setOpen] = useState(false);
   const [activePage, setActivePage] = useState<SettingsPage>('general');
 
@@ -85,7 +87,7 @@ function SettingsModalDesktop({ room }: Props) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
           <SettingsIcon className="size-4" />
-          <span className="hidden sm:inline">Settings</span>
+          {showLabel ? <span>Settings</span> : <span className="hidden sm:inline">Settings</span>}
         </Button>
       </DialogTrigger>
       <DialogContent

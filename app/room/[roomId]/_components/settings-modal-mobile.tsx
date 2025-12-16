@@ -46,9 +46,10 @@ type SettingsPage = 'general' | 'voting' | 'tshirt-definitions' | 'admins';
 
 type Props = {
   room: Database['public']['Tables']['rooms']['Row'];
+  showLabel?: boolean;
 };
 
-export function SettingsModalMobile({ room }: Props) {
+export function SettingsModalMobile({ room, showLabel }: Props) {
   const [open, setOpen] = useState(false);
   const [activePage, setActivePage] = useState<SettingsPage>('general');
 
@@ -73,7 +74,7 @@ export function SettingsModalMobile({ room }: Props) {
       <DrawerTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
           <SettingsIcon className="size-4" />
-          <span className="hidden sm:inline">Settings</span>
+          <span className={cn('hidden sm:inline', showLabel && 'inline')}>Settings</span>
         </Button>
       </DrawerTrigger>
       <DrawerContent className="max-h-[85vh]">
