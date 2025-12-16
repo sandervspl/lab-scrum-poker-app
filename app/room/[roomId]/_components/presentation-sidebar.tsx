@@ -23,6 +23,7 @@ export function PresentationSidebar({ room, isAdmin }: Props) {
         <CardContent className="flex flex-col gap-2">
           <ViewVotesButton className="w-full" />
           <ResetVotesButton className="w-full" />
+          <hr className="my-4" />
           {isAdmin && <SettingsModal room={room} showLabel />}
           <hr className="my-4" />
           <PresentationModeToggle className="justify-between" />
