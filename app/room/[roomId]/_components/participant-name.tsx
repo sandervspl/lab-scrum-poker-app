@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { participantsQueryOptions } from '@/lib/queries/room-queries';
+import { getParticipantCookie } from '@/lib/cookies';
+import { participantsQueryOptions, roomQueryOptions } from '@/lib/queries/room-queries';
+import { isRoomAdmin } from '@/lib/room-utils';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { CheckIcon, PencilIcon, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,8 +24,10 @@ export function ParticipantName({ participantId, currentName, roomId, userId }: 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
+  const { data: room } = useSuspenseQuery(roomQueryOptions(supabase, roomId));
+  const isAdmin = room.data ? isRoomAdmin(room.data, userId) : false;
 
-  const handleSave = async () => {
+  async function handleSave() {
     const trimmedName = newName.trim();
 
     // Client-side validation
@@ -60,26 +64,28 @@ export function ParticipantName({ participantId, currentName, roomId, userId }: 
     toast.success('Name updated successfully');
     setIsEditing(false);
     queryClient.invalidateQueries(participantsQueryOptions(supabase, roomId));
-  };
+  }
 
-  const handleCancel = () => {
+  function handleCancel() {
     setNewName(currentName);
     setIsEditing(false);
-  };
+  }
 
   if (!isEditing) {
     return (
       <>
         <Name name={currentName} userId={userId} participantId={participantId} />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-6"
-          onClick={() => setIsEditing(true)}
-          title="Edit name"
-        >
-          <PencilIcon className="size-3" />
-        </Button>
+        {isAdmin && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            onClick={() => setIsEditing(true)}
+            title="Edit name"
+          >
+            <PencilIcon className="size-3" />
+          </Button>
+        )}
       </>
     );
   }
@@ -104,7 +110,7 @@ export function ParticipantName({ participantId, currentName, roomId, userId }: 
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6"
+        className="size-6"
         onClick={handleSave}
         disabled={isSubmitting}
         title="Save"
@@ -114,7 +120,7 @@ export function ParticipantName({ participantId, currentName, roomId, userId }: 
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6"
+        className="size-6"
         onClick={handleCancel}
         disabled={isSubmitting}
         title="Cancel"

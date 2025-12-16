@@ -35,11 +35,9 @@ export function RoomClient({ roomId, participantId }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isPresentationMode = searchParams.get('mode') === 'presentation';
-
   const { data: room } = useSuspenseQuery(roomQueryOptions(supabase, roomId));
   const { data: participants } = useSuspenseQuery(participantsQueryOptions(supabase, roomId));
   const { data: votes } = useSuspenseQuery(votesQueryOptions(supabase, roomId));
-
   const isAdmin = room.data ? isRoomAdmin(room.data, participantId) : false;
 
   if (!room.data || !participants.data || !votes.data) {
