@@ -190,6 +190,6 @@
 }
 
 /* Presentation Mode: hide global header */
-body.presentation-mode-room header {
+body.presentation-mode-room #app-header {
   display: none !important;
 }
