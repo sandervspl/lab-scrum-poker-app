@@ -18,8 +18,6 @@ import { resetVotesOfRoom } from '@/lib/queries/room-db';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { RotateCcwIcon } from 'lucide-react';
 
-import { useRoomContext } from './context';
-
 type Props = {
   className?: string;
 };
@@ -27,7 +25,6 @@ type Props = {
 export function ResetVotesButton({ className }: Props) {
   const { roomId } = useParams<{ roomId: string }>();
   const [showResetDialog, setShowResetDialog] = useState(false);
-  const { setHasCelebrated } = useRoomContext();
 
   async function resetVotes() {
     const supabase = getSupabaseBrowserClient();
@@ -37,8 +34,6 @@ export function ResetVotesButton({ className }: Props) {
       console.error('Error deleting votes:', votesError?.message || roomError?.message);
       return;
     }
-
-    setHasCelebrated(false);
   }
 
   return (

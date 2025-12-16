@@ -40,8 +40,6 @@ import {
   ShirtIcon,
 } from 'lucide-react';
 
-import { useRoomContext } from './context';
-
 type SettingsPage = 'general' | 'voting' | 'tshirt-definitions' | 'admins';
 
 type Props = {
@@ -240,7 +238,6 @@ function MobileVotingSettings({
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
   const { data: votes } = useSuspenseQuery(votesQueryOptions(supabase, roomId));
-  const { setHasCelebrated } = useRoomContext();
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingMode, setPendingMode] = useState<VotingMode | null>(null);
   const [, startTransition] = useTransition();
@@ -256,12 +253,12 @@ function MobileVotingSettings({
     setPendingMode(null);
 
     startTransition(async () => {
+      let resetVotesPromise: Promise<any> | undefined;
       if (hasVotes) {
-        await resetVotesOfRoom(supabase, roomId);
-        setHasCelebrated(false);
+        resetVotesPromise = resetVotesOfRoom(supabase, roomId);
       }
 
-      await updateVotingMode(supabase, roomId, newMode);
+      await Promise.all([updateVotingMode(supabase, roomId, newMode), resetVotesPromise]);
       await Promise.all([
         queryClient.invalidateQueries(roomQueryOptions(supabase, roomId)),
         await queryClient.invalidateQueries(votesQueryOptions(supabase, roomId)),

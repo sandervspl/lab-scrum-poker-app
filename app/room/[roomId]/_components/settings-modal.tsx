@@ -41,7 +41,6 @@ import {
   ShirtIcon,
 } from 'lucide-react';
 
-import { useRoomContext } from './context';
 import { SettingsModalMobile } from './settings-modal-mobile';
 
 type SettingsPage = 'general' | 'voting' | 'tshirt-definitions' | 'admins';
@@ -218,7 +217,6 @@ function VotingSettings({
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
   const { data: votes } = useSuspenseQuery(votesQueryOptions(supabase, roomId));
-  const { setHasCelebrated } = useRoomContext();
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingMode, setPendingMode] = useState<VotingMode | null>(null);
   const hasVotes = (votes.data?.length ?? 0) > 0;
@@ -234,12 +232,12 @@ function VotingSettings({
     setPendingMode(null);
 
     startTransition(async () => {
+      let resetVotesPromise: Promise<any> | undefined;
       if (hasVotes) {
-        await resetVotesOfRoom(supabase, roomId);
-        setHasCelebrated(false);
+        resetVotesPromise = resetVotesOfRoom(supabase, roomId);
       }
 
-      await updateVotingMode(supabase, roomId, newMode);
+      await Promise.all([updateVotingMode(supabase, roomId, newMode), resetVotesPromise]);
       await Promise.all([
         queryClient.invalidateQueries(roomQueryOptions(supabase, roomId)),
         await queryClient.invalidateQueries(votesQueryOptions(supabase, roomId)),

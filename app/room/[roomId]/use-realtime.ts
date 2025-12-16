@@ -1,16 +1,20 @@
 import { useEffect, useEffectEvent } from 'react';
+import { useConfetti } from '@/lib/hooks/use-confetti';
+import { getParticipants, getVotes } from '@/lib/queries/room-db';
 import {
   participantsQueryOptions,
   roomQueryOptions,
   votesQueryOptions,
 } from '@/lib/queries/room-queries';
 import { updateRoomNameInHistory } from '@/lib/room-history';
+import { allVotesMatch } from '@/lib/room-utils';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
 export function useRealtime(roomId: string) {
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
+  const { shootConfetti } = useConfetti();
 
   const subscribeToEvents = useEffectEvent(() => {
     const channel = supabase
@@ -18,16 +22,35 @@ export function useRealtime(roomId: string) {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
-        (payload: any) => {
+        async (payload: any) => {
           console.log('Room updated:', payload);
           if (payload.new) {
             // Update cookie if room name changed
-            if (
-              payload.new.room_name &&
-              payload.old?.room_name !== payload.new.room_name
-            ) {
+            if (payload.new.room_name && payload.old?.room_name !== payload.new.room_name) {
               updateRoomNameInHistory(roomId, payload.new.room_name);
             }
+
+            // Trigger confetti when votes are revealed and all votes match
+            const wasRevealed = payload.old?.votes_revealed;
+            const isRevealed = payload.new.votes_revealed;
+            if (!wasRevealed && isRevealed) {
+              // Get cached data
+              const votesData = queryClient.getQueryData<Awaited<ReturnType<typeof getVotes>>>(
+                votesQueryOptions(supabase, roomId).queryKey,
+              );
+              const participantsData = queryClient.getQueryData<
+                Awaited<ReturnType<typeof getParticipants>>
+              >(participantsQueryOptions(supabase, roomId).queryKey);
+
+              if (
+                votesData?.data &&
+                participantsData?.data &&
+                allVotesMatch(votesData.data, participantsData.data, payload.new.voting_mode)
+              ) {
+                shootConfetti();
+              }
+            }
+
             queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
             queryClient.invalidateQueries(votesQueryOptions(supabase, roomId));
           }

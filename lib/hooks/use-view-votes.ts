@@ -1,6 +1,5 @@
 import { startTransition, useOptimistic } from 'react';
 import { useParams } from 'next/navigation';
-import { useRoomContext } from '@/app/room/[roomId]/_components/context';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 
 import {
@@ -19,8 +18,6 @@ export function useViewVotes() {
   const { data: votes } = useSuspenseQuery(votesQueryOptions(supabase, roomId));
   const { data: participants } = useSuspenseQuery(participantsQueryOptions(supabase, roomId));
   const [isRevealed, setIsRevealed] = useOptimistic(room?.data?.votes_revealed ?? false);
-  // const newValue = !room?.data?.votes_revealed;
-  const { hasCelebrated, setHasCelebrated } = useRoomContext();
   const { shootConfetti } = useConfetti();
   const queryClient = useQueryClient();
 
@@ -41,17 +38,6 @@ export function useViewVotes() {
       }
 
       await queryClient.invalidateQueries(roomQueryOptions(supabase, roomId));
-
-      if (
-        newValue &&
-        !hasCelebrated &&
-        votes.data &&
-        participants.data &&
-        allVotesMatch(votes.data, participants.data, room?.data?.voting_mode)
-      ) {
-        shootConfetti();
-        setHasCelebrated(true);
-      }
     });
   }
 
