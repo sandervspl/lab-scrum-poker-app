@@ -98,6 +98,7 @@ function ParticipantRow({
 }) {
   const vote = votes.find((v) => v.participant_id === participant.participant_id);
   const hasVoted = vote?.vote_value !== null && vote?.vote_value !== undefined;
+  const participantIsAdmin = isRoomAdmin(room, participant.participant_id);
 
   return (
     <div key={participant.id} className="bg-muted/80 flex items-center gap-4 rounded-lg p-3">
@@ -119,7 +120,7 @@ function ParticipantRow({
             roomId={room.id}
             userId={userId}
           />
-          {isAdmin && <CrownIcon className="size-4 text-amber-500" />}
+          {participantIsAdmin && <CrownIcon className="size-4 text-amber-500" />}
         </div>
       </div>
       <div className="flex items-center gap-2">
