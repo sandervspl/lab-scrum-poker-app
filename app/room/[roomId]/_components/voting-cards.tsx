@@ -7,7 +7,7 @@ import { roomQueryOptions, votesQueryOptions } from '@/lib/queries/room-queries'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
-import { getTshirtDefinitions, getVotingValues, TshirtDefinitions } from '@/types';
+import { getEnabledTshirtValues, getTshirtSettings, getVotingValues } from '@/types';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 
 export function VotingCards({ participantId }: { participantId: string }) {
@@ -20,9 +20,12 @@ export function VotingCards({ participantId }: { participantId: string }) {
     Database['public']['Tables']['votes']['Row']['vote_value'] | null
   >(votes.data?.find((v) => v.participant_id === participantId)?.vote_value ?? null);
   const votingMode = room.data?.voting_mode ?? 'fibonacci';
-  const votingValues = getVotingValues(votingMode);
   const isTshirtMode = votingMode === 'tshirt';
-  const definitions = getTshirtDefinitions(room.data?.tshirt_definitions as TshirtDefinitions);
+  const tshirtSettings = getTshirtSettings(room.data?.tshirt_definitions);
+  const votingValues = isTshirtMode
+    ? getEnabledTshirtValues(tshirtSettings.disabledSizes)
+    : getVotingValues(votingMode);
+  const definitions = tshirtSettings.definitions;
 
   async function castVote(value: string) {
     if (!participantId) {

@@ -24,10 +24,10 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Database } from '@/lib/supabase/database.types';
 import { cn } from '@/lib/utils';
 import {
-  getTshirtDefinitions,
+  getTshirtSettings,
   TSHIRT_DEFAULT_DEFINITIONS,
-  TSHIRT_VALUES,
-  TshirtDefinitions,
+  TSHIRT_SIZE_VALUES,
+  TshirtSettings,
   VotingMode,
 } from '@/types';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
@@ -40,6 +40,7 @@ import {
   SettingsIcon,
   ShirtIcon,
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 import { SettingsModalMobile } from './settings-modal-mobile';
 
@@ -338,19 +339,26 @@ function TshirtDefinitionsSettings({
   const supabase = getSupabaseBrowserClient();
   const queryClient = useQueryClient();
 
-  const currentDefinitions = getTshirtDefinitions(room.tshirt_definitions as TshirtDefinitions);
-  const [definitions, setDefinitions] = useState<TshirtDefinitions>(currentDefinitions);
+  const currentSettings = getTshirtSettings(room.tshirt_definitions);
+  const [definitions, setDefinitions] = useState(currentSettings.definitions);
+  const [disabledSizes, setDisabledSizes] = useState<string[]>(currentSettings.disabledSizes);
   const [isSaving, setIsSaving] = useState(false);
-  const definitionSizes = TSHIRT_VALUES.filter((v) => v !== '?' && v !== '☕');
 
-  const hasChanges = JSON.stringify(definitions) !== JSON.stringify(currentDefinitions);
+  const hasChanges =
+    JSON.stringify(definitions) !== JSON.stringify(currentSettings.definitions) ||
+    JSON.stringify(disabledSizes.sort()) !== JSON.stringify(currentSettings.disabledSizes.sort());
 
   async function handleSave() {
     setIsSaving(true);
 
+    const settings: TshirtSettings = {
+      definitions,
+      disabledSizes,
+    };
+
     const { error } = await supabase
       .from('rooms')
-      .update({ tshirt_definitions: definitions })
+      .update({ tshirt_definitions: settings })
       .eq('id', roomId);
 
     if (error) {
@@ -364,7 +372,16 @@ function TshirtDefinitionsSettings({
 
   function handleReset() {
     setDefinitions(TSHIRT_DEFAULT_DEFINITIONS);
+    setDisabledSizes([]);
   }
+
+  function toggleSize(size: string) {
+    setDisabledSizes((prev) =>
+      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size],
+    );
+  }
+
+  const enabledCount = TSHIRT_SIZE_VALUES.length - disabledSizes.length;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -374,23 +391,41 @@ function TshirtDefinitionsSettings({
         </Button>
         <h3 className="text-lg font-semibold">T-Shirt Sizing Definitions</h3>
         <p className="text-muted-foreground text-sm">
-          Customize what each size means for this room
+          Customize what each size means and which sizes are available
         </p>
       </header>
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
-        {definitionSizes.map((size) => (
-          <div key={size} className="flex items-center gap-3">
-            <span className="w-10 text-sm font-semibold">{size}</span>
-            <Input
-              value={definitions[size] ?? ''}
-              onChange={(e) => setDefinitions((prev) => ({ ...prev, [size]: e.target.value }))}
-              placeholder={TSHIRT_DEFAULT_DEFINITIONS[size]}
-              className="h-9"
-            />
-          </div>
-        ))}
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-6">
+        {TSHIRT_SIZE_VALUES.map((size) => {
+          const isEnabled = !disabledSizes.includes(size);
+          const isLastEnabled = isEnabled && enabledCount === 1;
+          return (
+            <div
+              key={size}
+              className={cn(
+                'flex items-center gap-3 rounded-lg border p-3 transition-opacity',
+                !isEnabled && 'opacity-50',
+              )}
+            >
+              <Switch
+                checked={isEnabled}
+                onCheckedChange={() => toggleSize(size)}
+                disabled={isLastEnabled}
+                aria-label={`Enable ${size}`}
+              />
+              <span className="w-10 text-sm font-semibold">{size}</span>
+              <Input
+                value={definitions[size] ?? ''}
+                onChange={(e) => setDefinitions((prev) => ({ ...prev, [size]: e.target.value }))}
+                placeholder={TSHIRT_DEFAULT_DEFINITIONS[size]}
+                className="h-9"
+                disabled={!isEnabled}
+              />
+            </div>
+          );
+        })}
         <p className="text-muted-foreground text-xs">
-          These definitions are shown on voting cards when using T-Shirt sizing
+          Toggle sizes on/off to control which options appear in voting. Definitions are shown on
+          voting cards.
         </p>
       </div>
       <footer className="flex shrink-0 items-center justify-between border-t px-6 py-4">
